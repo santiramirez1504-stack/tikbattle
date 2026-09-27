@@ -15,7 +15,8 @@
     "test:reconnect": "node tests/tiktokReconnect.js",
     "make-admin": "node scripts/makeAdmin.js",
     "backup": "node scripts/backupDb.js",
-    "restore": "node scripts/restoreDb.js"
+    "restore": "node scripts/restoreDb.js",
+    "test:load": "node tests/loadTest.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

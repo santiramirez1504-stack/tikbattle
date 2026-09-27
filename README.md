@@ -22,7 +22,7 @@ Primer juego: **Batalla de Países**. Los espectadores escriben el nombre de un 
 | 12. Persistencia en MongoDB (configuración, partidas, historial) | ✅ |
 | 13. Prueba en TikTok LIVE Studio | ✅ |
 | 15. Panel de administrador | ✅ Entregado (pendiente de tu confirmación) |
-| **16. Producción** | ⏭️ **En curso**: publicado en Render (https://tikbattle-aecz.onrender.com) y probado en TikTok LIVE Studio; falta la prueba de carga |
+| 16. Producción | ✅ Publicado en Render (https://tikbattle-aecz.onrender.com), probado en TikTok LIVE Studio y con prueba de carga (pendiente de tu confirmación) |
 | 14. Planes FREE / PRO | Pendiente (se hará al final, por decisión del proyecto) |
 
 ## Cómo arrancar el servidor
@@ -113,6 +113,7 @@ npm run test:module5   # temporizador (dura ~35 s)
 npm run test:module8 -- tu_email tu_contraseña   # simula chat en vivo en tu sala (servidor encendido y partida iniciada)
 npm run test:module9   # TikTok sin conexión real
 npm run test:reconnect # reconexión automática a TikTok (con una conexión falsa)
+npm run test:load -- --rooms 25 --rate 3 --seconds 30   # prueba de carga (servidor y base de datos aparte)
 ```
 
 ## Producción (Módulo 16)
@@ -139,6 +140,31 @@ Plan actual: **todo gratis** para empezar, y preparado para pasar más adelante 
 - **Errores inesperados**: se registran; si son graves, se guardan las salas y Docker vuelve a arrancar el servidor solo.
 - **Registros (logs)**: rotan solos (máx. 5 archivos de 10 MB). Verlos: `docker compose logs -f app`.
 - **Copias de seguridad**: `npm run backup` guarda toda la base de datos en `backups/` (se quedan las 7 últimas). Restaurar: `npm run restore -- backups/archivo.json.gz --confirm`.
+
+### Prueba de carga (27/09/2026)
+
+`npm run test:load -- --rooms 25 --rate 3 --seconds 30` arranca un servidor aparte (puerto 3999, base de datos `tikbattle_loadtest` que se borra al final), crea streamers de prueba con overlay y dashboard conectados, y les envía comentarios (y un regalo cada 5 s) a la vez.
+
+Resultados en el PC de desarrollo, con 0 errores en todas las pruebas:
+
+| Streamers a la vez | Comentarios/s por LIVE | CPU (% de 1 núcleo) | Memoria | Retraso hasta el overlay (mediana / p95) |
+|---|---|---|---|---|
+| 25 | 0 (solo salas abiertas) | 3 % | ~95 MB | — |
+| 25 | 3 | 28 % | ~180 MB | 42 ms / 124 ms |
+| 50 | 3 | 41 % | ~200 MB | 64 ms / 163 ms |
+| 50 | 6 | 66 % | ~205 MB | 47 ms / 486 ms |
+
+Cada comentario cuesta unos **2–3 ms de CPU** (en la prueba entra por HTTP con login y consulta a la base de datos; con TikTok real no hay ese paso, pero TikTok envía también "me gusta", entradas, etc., así que se toma como estimación prudente). Cada sala abierta sin comentarios cuesta ~0,1 % de CPU y unos 2 MB de memoria: **la memoria no es el límite, lo es la CPU**.
+
+**Capacidad estimada** (usando como máximo ~70 % de la CPU del plan):
+
+| Plan | CPU | LIVEs a la vez con ~3 comentarios/s cada uno |
+|---|---|---|
+| Render Free | 0,1 | **~5–10** |
+| Render Starter (7 USD/mes) | 0,5 | ~25–45 |
+| VPS con 1 núcleo completo (Hostinger, Oracle...) | 1 | ~50–90 |
+
+Si se pasa del límite, el servidor no se cae: los puntos llegan al overlay con más retraso. UptimeRobot y el retraso visible serán la señal para subir de plan.
 
 ### Pasar de Render a Hostinger (u Oracle) más adelante
 
@@ -189,7 +215,6 @@ Plan actual: **todo gratis** para empezar, y preparado para pasar más adelante 
 ### ⏳ Pendientes
 
 
-- **Módulo 16:** desplegar en el servidor (Oracle Cloud + DuckDNS), prueba de carga, Sentry y UptimeRobot.
 - **Módulo 14:** planes FREE / PRO (el último).
 
 ### 🔒 Antes de producción

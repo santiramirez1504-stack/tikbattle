@@ -59,7 +59,7 @@ class GameRoom extends EventEmitter {
     }
     this.game.on('end', (result) => this.handleEnd(result));
 
-    // Cuándo se guarda la foto: al empezar/terminar al instante; los puntos, agrupados cada 2 s
+    // Cuándo se guarda la foto: al empezar/terminar al instante; los puntos, agrupados (cada SNAPSHOT_INTERVAL_SECONDS)
     this.game.on('start', () => this.persistNow());
     this.game.on('score', () => this.schedulePersist());
     this.game.on('end', () => this.persistNow());
