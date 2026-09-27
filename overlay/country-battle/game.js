@@ -442,30 +442,46 @@ function addFeedItem(activity) {
 // ---------- Alerta grande de regalo ----------
 
 const giftAlertQueue = [];
-let isShowingGiftAlert = false;
+let currentAlert = null;   // alerta que se ve ahora: { activity, hideTimer }
 
+// Mismo espectador, mismo regalo y mismo país: se junta en una sola alerta (combos)
+function isSameGift(a, b) {
+  return a.username === b.username && a.giftName === b.giftName && a.countryId === b.countryId;
+}
+
+// Los combos (ej. Rosa x10) llegan como varios regalos seguidos: en vez de 10 alertas,
+// una sola cuyo contador sube en vivo ("5× Rosa +25").
 function queueGiftAlert(activity) {
-  giftAlertQueue.push(activity);
+  const incoming = { ...activity };
+
+  if (currentAlert && isSameGift(currentAlert.activity, incoming)) {
+    currentAlert.activity.count += incoming.count;
+    currentAlert.activity.points += incoming.points;
+    fillGiftAlert(currentAlert.activity);
+    restartAnimation(el('gift-alert-points'), 'bump');
+    scheduleGiftAlertHide(); // sigue visible mientras el combo continúa
+    return;
+  }
+
+  const last = giftAlertQueue[giftAlertQueue.length - 1];
+  if (last && isSameGift(last, incoming)) {
+    last.count += incoming.count;
+    last.points += incoming.points;
+    return;
+  }
+
+  giftAlertQueue.push(incoming);
   while (giftAlertQueue.length > GIFT_ALERT_QUEUE_MAX) {
     giftAlertQueue.shift();
   }
-  if (!isShowingGiftAlert) showNextGiftAlert();
+  if (!currentAlert) showNextGiftAlert();
 }
 
-function showNextGiftAlert() {
-  const activity = giftAlertQueue.shift();
-  const alertEl = el('gift-alert');
-  if (!activity) {
-    isShowingGiftAlert = false;
-    alertEl.hidden = true;
-    return;
-  }
-  isShowingGiftAlert = true;
-
+function fillGiftAlert(activity) {
   const country = findCountry(activity.countryId);
   const image = el('gift-alert-image');
   if (activity.giftImage && activity.giftImage.startsWith('https://')) {
-    image.src = activity.giftImage;
+    if (image.src !== activity.giftImage) image.src = activity.giftImage;
     image.hidden = false;
   } else {
     image.hidden = true;
@@ -473,16 +489,32 @@ function showNextGiftAlert() {
   el('gift-alert-user').textContent = activity.username;
   el('gift-alert-gift').textContent = `envió ${activity.count > 1 ? `${activity.count}× ` : ''}${activity.giftName}`;
   el('gift-alert-points').textContent = `+${formatPoints(activity.points)} a ${country ? country.name.toUpperCase() : ''}`;
-  alertEl.style.setProperty('--color', country ? country.color : '#fbbf24');
+  el('gift-alert').style.setProperty('--color', country ? country.color : '#fbbf24');
+}
 
+function scheduleGiftAlertHide() {
+  clearTimeout(currentAlert.hideTimer);
+  currentAlert.hideTimer = setTimeout(() => {
+    el('gift-alert').classList.add('is-leaving');
+    setTimeout(showNextGiftAlert, 350);
+  }, GIFT_ALERT_MS);
+}
+
+function showNextGiftAlert() {
+  const activity = giftAlertQueue.shift();
+  const alertEl = el('gift-alert');
+  if (!activity) {
+    currentAlert = null;
+    alertEl.hidden = true;
+    return;
+  }
+
+  currentAlert = { activity, hideTimer: null };
+  fillGiftAlert(activity);
   alertEl.classList.remove('is-leaving');
   alertEl.hidden = false;
   restartAnimation(alertEl, 'gift-alert');
-
-  setTimeout(() => {
-    alertEl.classList.add('is-leaving');
-    setTimeout(showNextGiftAlert, 350);
-  }, GIFT_ALERT_MS);
+  scheduleGiftAlertHide();
 }
 
 function handleActivity(activity) {

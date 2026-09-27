@@ -25,19 +25,25 @@ game.start();
 console.log('1) Comentario "Cuba" de juan:');
 tiktok.handleChat({ user: { displayId: 'juan' }, content: 'Cuba' });
 
-console.log('2) juan envía un combo de 3 Rosas (TikTok manda 3 eventos "en curso" y 1 final):');
-const rose = { user: { displayId: 'juan' }, giftId: '5655', gift: { name: 'Rose', type: 1 } };
+console.log('2) juan envía un combo de 3 Rosas: cada toque suma AL INSTANTE (1 Rosa cada vez):');
+const rose = { user: { displayId: 'juan' }, giftId: '5655', groupId: '111', gift: { name: 'Rose', type: 1 } };
 tiktok.handleGift({ ...rose, repeatCount: 1, repeatEnd: 0 });
 tiktok.handleGift({ ...rose, repeatCount: 2, repeatEnd: 0 });
 tiktok.handleGift({ ...rose, repeatCount: 3, repeatEnd: 0 });
-console.log('   (los 3 eventos "en curso" se ignoraron; ahora llega el final)');
+console.log('   Llega el evento final del combo (total 3, ya contadas): no genera evento.');
 tiktok.handleGift({ ...rose, repeatCount: 3, repeatEnd: 1 });
+console.log('   TikTok repite el evento final por error: tampoco se cuenta dos veces.\n');
+tiktok.handleGift({ ...rose, repeatCount: 3, repeatEnd: 1 });
+
+console.log('2b) juan empieza OTRO combo de 2 Rosas (el contador vuelve a 1): se cuenta como nuevo:');
+tiktok.handleGift({ ...rose, groupId: '222', repeatCount: 1, repeatEnd: 0 });
+tiktok.handleGift({ ...rose, groupId: '222', repeatCount: 2, repeatEnd: 1 });
 
 console.log('3) Un comentario sin usuario (dato incompleto) se ignora:');
 tiktok.handleChat({ content: 'Cuba' });
 console.log('   (no se generó ningún evento)\n');
 
-console.log('Marcador final (esperado: Cuba = 1 + 3x50 = 151):');
+console.log('Marcador final (esperado: Cuba = 1 + 5x50 = 251):');
 console.table(game.getState().countries.map(({ name, points }) => ({ name, points })));
 
 game.finish();

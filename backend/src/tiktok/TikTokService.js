@@ -19,6 +19,8 @@ const DEFAULT_RECONNECT_DELAYS_SECONDS = [5, 10, 20, 30, 60, 60, 60, 60];
 
 // Regalos que se pueden enviar en combo (ej. Rosa x10)
 const STREAKABLE_GIFT_TYPE = 1;
+// Cuánto se recuerda un combo para no contarlo dos veces si TikTok repite algún evento
+const STREAK_MEMORY_MS = 2 * 60 * 1000;
 
 // ÚNICA parte del proyecto que conoce la librería tiktok-live-connector.
 // Recibe los eventos de TikTok, los convierte al modelo interno y los anuncia con 'event'.
@@ -38,6 +40,8 @@ class TikTokService extends EventEmitter {
 
     this.connection = null;
     this.status = CONNECTION_STATUS.DISCONNECTED;
+    // Combos de regalos recientes: "usuario|regalo|combo" -> { counted, at }
+    this.streaks = new Map();
     this.username = null;
     this.roomId = null;
     this.profile = null; // { nickname, avatarUrl } del dueño del LIVE
@@ -196,6 +200,7 @@ class TikTokService extends EventEmitter {
 
   // Vuelve al estado "desconectado" y olvida cualquier reconexión pendiente
   resetState() {
+    this.streaks.clear();
     clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
     this.wantsConnection = false;
@@ -237,10 +242,15 @@ class TikTokService extends EventEmitter {
     const gift = data.gift || data.giftDetails || {};
     const giftType = gift.type ?? gift.giftType;
 
-    // Combos: TikTok envía un evento por cada regalo mientras dura el combo y uno final con repeatEnd.
-    // Solo procesamos el final (que trae la cantidad total) para no contar dos veces.
-    if (giftType === STREAKABLE_GIFT_TYPE && !data.repeatEnd) {
-      return;
+    // Combos (ej. Rosa x10): TikTok envía un evento por cada toque con el total acumulado (repeatCount)
+    // y uno final con repeatEnd. Sumamos al instante solo lo NUEVO de cada evento: así los puntos
+    // aparecen mientras el espectador sigue enviando, sin esperar a que termine el combo.
+    let count = data.repeatCount || 1;
+    if (giftType === STREAKABLE_GIFT_TYPE) {
+      count = this.countStreakIncrement(username, data);
+      if (count <= 0) {
+        return; // nada nuevo (evento repetido o ya contado)
+      }
     }
 
     this.emit('event', {
@@ -250,9 +260,29 @@ class TikTokService extends EventEmitter {
       avatarUrl: getAvatarUrl(data.user),
       giftName: gift.name ?? gift.giftName ?? null,
       giftId: data.giftId,
-      count: data.repeatCount || 1,
+      count,
       timestamp: new Date().toISOString(),
     });
+  }
+
+  // Cuántos regalos NUEVOS trae este evento de un combo (total acumulado - lo ya contado)
+  countStreakIncrement(username, data) {
+    const now = Date.now();
+    for (const [key, streak] of this.streaks) {
+      if (now - streak.at > STREAK_MEMORY_MS) this.streaks.delete(key);
+    }
+
+    const key = `${username}|${data.giftId}|${data.groupId || ''}`;
+    const total = Number(data.repeatCount) || 1;
+    const previous = this.streaks.get(key);
+    let counted = previous ? previous.counted : 0;
+    // Si el total vuelve a empezar desde abajo, es un combo nuevo con el mismo identificador
+    if (previous && total < counted) {
+      counted = 0;
+    }
+
+    this.streaks.set(key, { counted: Math.max(counted, total), at: now });
+    return total - counted;
   }
 }
 
