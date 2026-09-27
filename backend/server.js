@@ -73,6 +73,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// TEMPORAL (verificar TRUST_PROXY en Render): muestra solo TU propia IP tal como la ve el servidor
+app.get('/api/whoami', (req, res) => {
+  res.json({ ip: req.ip, ips: req.ips, forwardedFor: req.headers['x-forwarded-for'] || null });
+});
+
 // La página principal lleva al dashboard del streamer
 app.get('/', (req, res) => {
   res.redirect('/dashboard/');
