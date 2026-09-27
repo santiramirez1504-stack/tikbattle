@@ -3,11 +3,13 @@
 const overlayKey = new URLSearchParams(window.location.search).get('key');
 
 const GAME_EVENTS = ['game:state', 'game:start', 'game:update', 'game:score', 'game:end', 'game:reset'];
-const ROW_HEIGHT = 92;          // debe coincidir con --row-height en style.css
+const ROW_HEIGHT = 86;          // alto de cada tarjeta: debe coincidir con --row-height en style.css
+const TILE_GAP = 10;            // espacio entre tarjetas: debe coincidir con --tile-gap en style.css
+const COLUMNS = 2;              // los países van en 2 columnas (8 países = 4 filas)
 const URGENT_SECONDS = 10;      // desde aquí el temporizador se pone rojo y aparece la cuenta atrás grande
 const MIN_BAR_PERCENT = 3;      // para que una barra con pocos puntos se vea igualmente
-const FEED_MAX_ITEMS = 4;       // mensajes visibles a la vez en el feed
-const FEED_ITEM_MS = 6000;      // cuánto dura cada mensaje del feed
+const FEED_MAX_ITEMS = 1;       // la actividad se ve de una en una, dentro de la cápsula de estado
+const FEED_ITEM_MS = 3000;      // cuánto se ve cada actividad (si llega otra antes, la reemplaza)
 const GIFT_ALERT_MS = 2800;     // cuánto dura cada alerta de regalo
 const GIFT_ALERT_QUEUE_MAX = 5; // alertas en espera como máximo (si llegan más, se descartan las más viejas)
 const FLOAT_GROUP_MS = 250;     // los "+N" de un país se agrupan en este tiempo (para no saturar la pantalla)
@@ -132,8 +134,13 @@ function createRow(country) {
   fillEl.className = 'bar-fill';
   bar.append(fillEl);
 
-  top.append(flagSlot, text, pointsEl);
-  rowEl.append(top, bar);
+  // Arriba: bandera + nombre (y debajo qué escribir o el MVP). Abajo: barra + puntos
+  const bottom = document.createElement('div');
+  bottom.className = 'row-bottom';
+  bottom.append(bar, pointsEl);
+
+  top.append(flagSlot, text);
+  rowEl.append(top, bottom);
   boardEl.append(rowEl);
 
   const row = { el: rowEl, flagSlot, flagKey: null, nameEl, subEl, pointsEl, fillEl, lastPoints: country.points, pendingFloat: 0, floatTimer: null };
@@ -156,21 +163,33 @@ function queueFloatPoints(row, amount) {
   }, FLOAT_GROUP_MS);
 }
 
-// Nombres largos (ej. "República Dominicana"): la letra se reduce solo lo necesario para que quepa
-// entero. Se recalcula únicamente si cambia el nombre, los puntos (su ancho) o la corona del líder.
-const NAME_MAX_FONT = 26;
-const NAME_MIN_FONT = 15;
+// Textos largos (ej. "República Dominicana"): la letra se reduce solo lo necesario para que quepan
+// enteros. Se recalcula únicamente si cambia el texto o la corona del líder.
+const NAME_MAX_FONT = 21;
+const NAME_MIN_FONT = 11;
+const SUB_MAX_FONT = 14;
+const SUB_MIN_FONT = 10;
+
+function fitText(element, maxFont, minFont) {
+  let size = maxFont;
+  element.style.fontSize = `${size}px`;
+  while (element.scrollWidth > element.clientWidth && size > minFont) {
+    size -= 1;
+    element.style.fontSize = `${size}px`;
+  }
+}
 
 function fitName(row) {
-  const key = `${row.nameEl.textContent}|${row.el.classList.contains('leader')}|${row.pointsText.nodeValue.length}`;
+  const key = `${row.nameEl.textContent}|${row.el.classList.contains('leader')}|${row.subEl.textContent}`;
   if (row.fitKey === key) return;
   row.fitKey = key;
 
-  let size = NAME_MAX_FONT;
-  row.nameEl.style.fontSize = `${size}px`;
-  while (row.nameEl.scrollWidth > row.nameEl.clientWidth && size > NAME_MIN_FONT) {
-    size -= 1;
-    row.nameEl.style.fontSize = `${size}px`;
+  fitText(row.nameEl, NAME_MAX_FONT, NAME_MIN_FONT);
+  // "Escribe: ..." también se ajusta (el MVP ya recorta su nombre con "...")
+  if (row.subEl.querySelector('.mvp')) {
+    row.subEl.style.fontSize = '';
+  } else {
+    fitText(row.subEl, SUB_MAX_FONT, SUB_MIN_FONT);
   }
 }
 
@@ -203,7 +222,8 @@ function renderBoard(state) {
   const sorted = [...countries].sort((a, b) => b.points - a.points);
   const maxPoints = sorted.length > 0 ? sorted[0].points : 0;
 
-  boardEl.style.height = `${sorted.length * ROW_HEIGHT}px`;
+  const rowCount = Math.ceil(sorted.length / COLUMNS);
+  boardEl.style.height = `${Math.max(0, rowCount * (ROW_HEIGHT + TILE_GAP) - TILE_GAP)}px`;
 
   // Si el streamer quitó países en la configuración, se borran sus filas
   const currentIds = new Set(countries.map((country) => country.id));
@@ -229,7 +249,11 @@ function renderBoard(state) {
     }
     renderRowSub(row, country, state.gameStatus);
 
-    row.el.style.transform = `translateY(${index * ROW_HEIGHT}px)`;
+    // Puesto 1 arriba a la izquierda, 2 arriba a la derecha, 3 debajo del 1...
+    const column = index % COLUMNS;
+    const line = Math.floor(index / COLUMNS);
+    const x = column === 0 ? '0px' : `calc(100% + ${TILE_GAP}px)`;
+    row.el.style.transform = `translate(${x}, ${line * (ROW_HEIGHT + TILE_GAP)}px)`;
     row.el.classList.toggle('leader', index === 0 && country.points > 0);
     // El número es el primer "nodo de texto" de pointsEl (detrás pueden ir los "+N" flotantes)
     if (!row.pointsText) {
@@ -313,7 +337,7 @@ function renderGiftStrip(state) {
 
   const label = document.createElement('span');
   label.className = 'gift-strip-label';
-  label.textContent = '🎁 Regalos:';
+  label.textContent = '🎁';
   giftStripEl.append(label);
 
   for (const gift of gifts) {
@@ -356,8 +380,9 @@ function addFeedItem(activity) {
   const who = document.createElement('strong');
   who.textContent = activity.username;
   const countryName = country ? country.name : '';
+  // Texto corto: cabe en la cápsula de estado (el detalle del regalo sale en la alerta grande)
   const rest = activity.type === 'GIFT'
-    ? ` envió ${activity.count > 1 ? `${activity.count}× ` : ''}${activity.giftName} → +${formatPoints(activity.points)} a ${countryName}`
+    ? ` +${formatPoints(activity.points)} a ${countryName}`
     : ` se unió a ${countryName}`;
   text.append(who, document.createTextNode(rest));
   item.append(text);

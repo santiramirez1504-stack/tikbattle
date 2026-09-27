@@ -15,32 +15,28 @@
     <!-- Confeti de la pantalla de ganador (se dibuja con JavaScript) -->
     <canvas class="confetti" id="confetti"></canvas>
 
-    <!-- Cabecera en una sola fila: título · estado · tiempo -->
+    <!-- Cabecera en una sola fila: título · estado (o la última actividad) · tiempo -->
     <header class="header">
       <h1 class="title">Batalla de<br><span>Países</span></h1>
-      <p class="status" id="status">Conectando...</p>
+      <div class="status-wrap">
+        <p class="status" id="status">Conectando...</p>
+        <!-- Actividad: "juan se unió a Cuba", "maria envió Rosa +50"... (se muestra encima del estado) -->
+        <ul class="feed" id="feed"></ul>
+      </div>
       <div class="timer" id="timer">
         <span class="timer-label">Tiempo</span>
         <span class="timer-value" id="time">--:--</span>
       </div>
     </header>
 
-    <!-- Cuerpo en dos columnas: marcador a la izquierda, actividad y regalos a la derecha -->
-    <div class="body">
-      <!-- Marcador: las filas de los países se crean desde game.js -->
-      <div class="board-wrap">
-        <div class="leader-banner" id="leader-banner" hidden></div>
-        <ol class="board" id="board"></ol>
-      </div>
-
-      <aside class="side">
-        <!-- Feed de actividad: "juan apoyó a Cuba", "maria envió Rosa +50"... -->
-        <ul class="feed" id="feed"></ul>
-
-        <!-- Regalos que suman puntos, con su imagen y su valor -->
-        <footer class="gift-strip" id="gift-strip" hidden></footer>
-      </aside>
+    <!-- Marcador en 2 columnas: las tarjetas de los países se crean desde game.js -->
+    <div class="board-wrap">
+      <div class="leader-banner" id="leader-banner" hidden></div>
+      <ol class="board" id="board"></ol>
     </div>
+
+    <!-- Regalos que suman puntos, con su imagen y su valor -->
+    <footer class="gift-strip" id="gift-strip" hidden></footer>
 
     <!-- Cuenta atrás grande de los últimos 10 segundos -->
     <div class="countdown" id="countdown" hidden></div>

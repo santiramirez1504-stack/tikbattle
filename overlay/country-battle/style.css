@@ -9,7 +9,8 @@
   --accent-2: #25f4ee;        /* cian TikTok */
   --gold: #fbbf24;
   --danger: #ef4444;
-  --row-height: 92px;         /* debe coincidir con ROW_HEIGHT en game.js */
+  --row-height: 86px;         /* alto de cada tarjeta de país: debe coincidir con ROW_HEIGHT en game.js */
+  --tile-gap: 10px;           /* espacio entre tarjetas: debe coincidir con TILE_GAP en game.js */
 }
 
 * {
@@ -40,16 +41,17 @@ body {
 }
 
 /* ===== Panel principal =====
-   Formato horizontal. Se diseña con un ancho fijo (720 px: letras grandes en proporción al panel) y game.js lo escala (--scale) para que quepa ENTERO
-   en el tamaño que el streamer le dé a la fuente: más grande o más pequeño, nunca se corta. */
+   Pensado para el lienzo vertical de TikTok: se diseña con un ancho fijo pequeño (540 px) y game.js lo
+   escala (--scale) hasta llenar el ancho de la fuente. Así las letras salen grandes en el LIVE.
+   Los países van en 2 columnas para que, aunque sean 8, el panel no se alargue demasiado. */
 .panel {
   position: absolute;
   top: var(--fit-margin, 12px);
   left: 50%;
-  width: 720px;
+  width: 540px;
   transform: translateX(-50%) scale(var(--scale, 1));
   transform-origin: top center;
-  padding: 18px 22px 20px;
+  padding: 14px;
   background:
     radial-gradient(120% 60% at 50% 0%, rgba(37, 244, 238, 0.10), transparent 60%),
     radial-gradient(120% 60% at 50% 100%, rgba(254, 44, 85, 0.12), transparent 60%),
@@ -60,17 +62,23 @@ body {
   overflow: hidden;
 }
 
-/* ===== Cabecera: título + temporizador ===== */
+/* La pantalla de ganador necesita algo de alto aunque haya pocos países */
+.panel:has(.result:not(.hidden)) {
+  min-height: 270px;
+}
+
+/* ===== Cabecera: título + estado + temporizador ===== */
 .header {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 14px;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .title {
   flex-shrink: 0;
-  font-size: 20px;
+  align-self: center;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.05;
   text-transform: uppercase;
@@ -78,7 +86,7 @@ body {
 }
 
 .title span {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 900;
   background: linear-gradient(90deg, var(--accent-2), var(--accent));
   -webkit-background-clip: text;
@@ -91,15 +99,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 124px;
-  padding: 6px 12px;
-  border-radius: 16px;
+  justify-content: center;
+  min-width: 108px;
+  padding: 4px 10px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
   transition: background 0.3s;
 }
 
 .timer-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -107,7 +116,7 @@ body {
 }
 
 .timer-value {
-  font-size: 38px;
+  font-size: 34px;
   font-weight: 900;
   font-variant-numeric: tabular-nums; /* los números no "bailan" al cambiar */
   line-height: 1.1;
@@ -119,36 +128,38 @@ body {
   animation: pulse 1s infinite;
 }
 
-/* ===== Mensaje de estado ===== */
-.status {
+/* ===== Mensaje de estado (y encima, la última actividad) ===== */
+.status-wrap {
+  position: relative;
+  display: flex;
   flex: 1;
   min-width: 0;
-  padding: 10px 12px;
+}
+
+.status {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 6px 10px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   line-height: 1.2;
   text-align: center;
 }
 
-/* ===== Cuerpo: marcador (izquierda) + actividad y regalos (derecha) ===== */
-.body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 236px;
-  gap: 16px;
-}
-
-.side {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 0;
+/* Mientras se ve una actividad, el estado queda oculto debajo */
+.status-wrap:has(.feed-item) .status {
+  visibility: hidden;
 }
 
 /* ===== Marcador ===== */
 .board-wrap {
   position: relative;
+  margin-bottom: 10px;
 }
 
 .board {
@@ -156,30 +167,49 @@ body {
   list-style: none;
 }
 
-/* Cada fila se coloca con translateY: al cambiar de posición se desliza suavemente */
+/* Cada país es una tarjeta (2 por fila). Se coloca con transform: al cambiar de puesto se desliza */
 .row {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: calc((100% - var(--tile-gap)) / 2);
   height: var(--row-height);
-  padding: 6px 2px;
-  transition: transform 0.5s ease;
+  padding: 8px 10px 9px;
+  border-left: 4px solid var(--color);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: transform 0.5s ease, background 0.3s;
+}
+
+/* El país que va primero se ilumina con su color */
+.row.leader {
+  background: color-mix(in srgb, var(--color) 20%, rgba(255, 255, 255, 0.06));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color) 45%, transparent);
 }
 
 .row-top {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Barra y puntos, en la misma línea */
+.row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Bandera (o círculo con la inicial si el país no tiene bandera) */
 .row-flag {
   flex-shrink: 0;
-  width: 52px;
-  height: 39px;
-  border-radius: 7px;
+  width: 42px;
+  height: 32px;
+  border-radius: 6px;
   object-fit: cover;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 4px 10px rgba(0, 0, 0, 0.4);
 }
@@ -189,7 +219,7 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--color);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 900;
 }
 
@@ -202,7 +232,7 @@ body {
 
 .row-name {
   overflow: hidden;
-  font-size: 26px;
+  font-size: 21px;
   font-weight: 900;
   line-height: 1.1;
   text-overflow: ellipsis;
@@ -219,9 +249,9 @@ body {
 /* Debajo del nombre: qué escribir en el chat, o el MVP (quien más puntos le dio) */
 .row-sub {
   overflow: hidden;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -229,7 +259,7 @@ body {
 .row-sub .mvp {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
   color: var(--gold);
 }
@@ -249,15 +279,15 @@ body {
 }
 
 .mvp-avatar {
-  width: 24px;
-  height: 24px;
-  font-size: 13px;
+  width: 19px;
+  height: 19px;
+  font-size: 11px;
 }
 
 .podium .podium-avatar {
-  width: 30px;
-  height: 30px;
-  font-size: 14px;
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
 }
 
 .avatar-fallback {
@@ -272,14 +302,17 @@ body {
 .row-points {
   position: relative;
   flex-shrink: 0;
-  font-size: 34px;
+  font-size: 26px;
   font-weight: 900;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--color);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .bar {
-  height: 16px;
+  flex: 1;
+  height: 12px;
   border-radius: 999px;
   background: var(--track);
   overflow: hidden;
@@ -332,11 +365,11 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 18px;
+  padding: 9px 16px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--accent), #ff7a45);
   box-shadow: 0 8px 30px rgba(254, 44, 85, 0.55);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 900;
   text-transform: uppercase;
   white-space: nowrap;
@@ -351,33 +384,33 @@ body {
   object-fit: cover;
 }
 
-/* ===== Feed de actividad ===== */
+/* ===== Actividad (una a la vez, dentro de la cápsula de estado) ===== */
 .feed {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  min-height: 200px; /* espacio para 4 mensajes: el panel no cambia de tamaño cuando entran */
+  position: absolute;
+  inset: 0;
   list-style: none;
-  overflow: hidden;
+  pointer-events: none;
 }
 
 .feed-item {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  justify-content: center;
+  gap: 7px;
+  padding: 4px 10px;
   border-left: 4px solid var(--color);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
-  font-size: 16px;
-  font-weight: 700;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color) 22%, rgb(22, 24, 42));
+  font-size: 15px;
+  font-weight: 800;
   white-space: nowrap;
-  animation: feed-in 0.35s ease;
+  animation: feed-in 0.3s ease;
 }
 
 .feed-item.is-gift {
-  background: linear-gradient(90deg, rgba(251, 191, 36, 0.22), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.35), rgb(22, 24, 42));
 }
 
 .feed-item.is-leaving {
@@ -407,37 +440,34 @@ body {
   color: var(--accent-2);
 }
 
-/* ===== Regalos que suman puntos ===== */
+/* ===== Regalos que suman puntos (una fila centrada) ===== */
 .gift-strip {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .gift-strip-label {
-  width: 100%;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-soft);
+  font-size: 20px;
 }
 
 .gift-chip {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px 4px 6px;
+  gap: 3px;
+  padding: 3px 9px 3px 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 17px;
+  background: rgba(255, 255, 255, 0.09);
+  font-size: 16px;
   font-weight: 900;
   color: var(--gold);
 }
 
 .gift-chip img {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
 }
 
@@ -451,7 +481,7 @@ body {
   justify-content: center;
   pointer-events: none;
   color: #fff;
-  font-size: 220px;
+  font-size: 200px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 40px var(--danger), 0 0 12px rgba(0, 0, 0, 0.8);
@@ -463,17 +493,17 @@ body {
 }
 
 /* ===== Alerta grande de regalo ===== */
-/* Aparece abajo a la derecha, justo encima de la columna de actividad (no tapa el marcador) */
+/* Aparece abajo, encima de la fila de regalos */
 .gift-alert {
   position: absolute;
   right: 14px;
-  bottom: 18px;
-  width: 248px;
+  bottom: 12px;
+  left: 14px;
   z-index: 5;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 8px 14px;
   border: 3px solid var(--gold);
   border-radius: 20px;
   background: rgba(10, 12, 28, 0.95);
@@ -487,8 +517,8 @@ body {
 
 .gift-alert-image {
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
   animation: gift-wiggle 1s ease-in-out infinite;
 }
@@ -501,20 +531,20 @@ body {
 
 .gift-alert-text strong {
   overflow: hidden;
-  font-size: 22px;
+  font-size: 19px;
   color: var(--accent-2);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .gift-alert-text span {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .gift-alert-points {
   color: var(--gold);
-  font-size: 26px !important;
+  font-size: 22px !important;
   font-weight: 900 !important;
 }
 
@@ -526,7 +556,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 14px;
   background: rgba(10, 12, 28, 0.8);
   backdrop-filter: blur(4px);
 }
@@ -542,9 +572,9 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
-  gap: 24px;
+  gap: 14px;
   width: 100%;
-  padding: 22px 22px;
+  padding: 16px 14px;
   border-radius: 20px;
   border: 3px solid var(--color);
   background: rgba(0, 0, 0, 0.6);
@@ -577,8 +607,8 @@ body {
 }
 
 .result-flags img {
-  width: 112px;
-  height: 84px;
+  width: 96px;
+  height: 72px;
   border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -586,25 +616,25 @@ body {
 }
 
 .result-flags.is-tie img {
-  width: 84px;
-  height: 63px;
+  width: 64px;
+  height: 48px;
 }
 
 .result-flags .trophy {
-  font-size: 64px;
+  font-size: 56px;
   line-height: 1;
 }
 
 .result-label {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--text-soft);
 }
 
 .result-names {
-  font-size: 38px;
+  font-size: 30px;
   font-weight: 900;
   line-height: 1.1;
   text-transform: uppercase;
@@ -612,7 +642,7 @@ body {
 }
 
 .result-points {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -628,11 +658,11 @@ body {
 .podium li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 6px 8px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
-  font-size: 19px;
+  font-size: 16px;
   font-weight: 700;
   text-align: left;
 }
@@ -756,16 +786,16 @@ body {
 }
 
 .result-flag {
-  width: 112px;
-  height: 84px;
+  width: 96px;
+  height: 72px;
   border-radius: 10px;
   font-size: 44px;
 }
 
 .podium-flag {
   flex-shrink: 0;
-  width: 24px;
-  height: 18px;
+  width: 22px;
+  height: 16px;
   border-radius: 3px;
   font-size: 11px;
 }
