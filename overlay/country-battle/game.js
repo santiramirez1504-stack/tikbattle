@@ -14,6 +14,8 @@ const GIFT_ALERT_MS = 2800;     // cuánto dura cada alerta de regalo
 const GIFT_ALERT_QUEUE_MAX = 5; // alertas en espera como máximo (si llegan más, se descartan las más viejas)
 const FLOAT_GROUP_MS = 250;     // los "+N" de un país se agrupan en este tiempo (para no saturar la pantalla)
 const CONFETTI_MS = 4500;
+const GIFTS_PER_PAGE = 5;       // regalos que caben en la fila de abajo
+const GIFT_PAGE_MS = 4000;      // si hay más, rotan en grupos cada 4 s
 
 const STATUS_TEXT = {
   WAITING: '⏳ ¡Elige tu país! Escribe su nombre en el chat',
@@ -322,17 +324,48 @@ function renderTimer(state) {
 }
 
 // ---------- Regalos que suman puntos ----------
+// Se muestran TODOS: si no caben en una fila, rotan en grupos (1/3, 2/3...) cada GIFT_PAGE_MS
 
 let lastGiftsKey = null;
+let giftPages = [];
+let giftPageIndex = 0;
+let giftPageTimer = null;
 
 function renderGiftStrip(state) {
-  const gifts = (state.gifts || []).slice(0, 5);
+  const gifts = state.gifts || [];
   const key = JSON.stringify(gifts);
   if (key === lastGiftsKey) return; // no ha cambiado: no se redibuja (evita parpadeos)
   lastGiftsKey = key;
 
-  giftStripEl.textContent = '';
+  // Grupos del mismo tamaño (ej. 7 regalos -> 4 + 3, no 5 + 2)
+  const pageCount = Math.ceil(gifts.length / GIFTS_PER_PAGE);
+  const perPage = Math.ceil(gifts.length / Math.max(pageCount, 1));
+  giftPages = [];
+  for (let i = 0; i < gifts.length; i += perPage) giftPages.push(gifts.slice(i, i + perPage));
+  giftPageIndex = 0;
+
+  clearInterval(giftPageTimer);
+  giftPageTimer = null;
   giftStripEl.hidden = gifts.length === 0;
+  showGiftPage();
+  if (giftPages.length > 1) {
+    giftPageTimer = setInterval(nextGiftPage, GIFT_PAGE_MS);
+  }
+}
+
+// Fundido corto entre grupos (solo cambia la opacidad: casi no gasta CPU)
+function nextGiftPage() {
+  giftStripEl.classList.add('is-changing');
+  setTimeout(() => {
+    giftPageIndex = (giftPageIndex + 1) % giftPages.length;
+    showGiftPage();
+    giftStripEl.classList.remove('is-changing');
+  }, 250);
+}
+
+function showGiftPage() {
+  giftStripEl.textContent = '';
+  const gifts = giftPages[giftPageIndex] || [];
   if (gifts.length === 0) return;
 
   const label = document.createElement('span');
@@ -355,6 +388,13 @@ function renderGiftStrip(state) {
     }
     chip.append(document.createTextNode(`+${formatPoints(gift.points)}`));
     giftStripEl.append(chip);
+  }
+
+  if (giftPages.length > 1) {
+    const page = document.createElement('span');
+    page.className = 'gift-strip-page';
+    page.textContent = `${giftPageIndex + 1}/${giftPages.length}`;
+    giftStripEl.append(page);
   }
 }
 

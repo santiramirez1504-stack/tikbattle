@@ -178,21 +178,25 @@ class GameRoom extends EventEmitter {
     this.isManualStop = false;
   }
 
+  // Regalos: siempre, al instante (cambiar lo que vale un regalo no afecta a los puntos ya sumados).
   // Duración y reinicio automático: siempre (la duración vale para la próxima partida).
-  // Países y regalos: solo si no hay una partida en curso (si la hay, se aplican en la siguiente).
+  // Países: solo si no hay una partida en curso (si la hay, se aplican en la siguiente).
   applyConfig(config) {
+    this.activeGifts = config.gifts;
+    this.giftProcessor.setGifts(config.gifts);
+
     this.autoRestartSeconds = config.autoRestartSeconds;
     if (this.autoRestartSeconds === 0) {
       this.cancelAutoRestart();
     }
-    this.game.setDuration(config.durationSeconds);
+    this.game.setDuration(config.durationSeconds); // avisa al overlay y al dashboard (ya con los regalos nuevos)
 
     if (!this.game.isRunning()) {
       this.activeCountries = config.countries;
-      this.activeGifts = config.gifts;
       this.game.setCountries(config.countries);
       this.chatProcessor.setCountries(config.countries);
-      this.giftProcessor.setGifts(config.gifts);
+    } else {
+      this.schedulePersist(); // la foto de la partida en curso guarda también los regalos
     }
   }
 

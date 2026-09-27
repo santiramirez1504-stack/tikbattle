@@ -184,10 +184,10 @@ body {
   transition: transform 0.5s ease, background 0.3s;
 }
 
-/* El país que va primero se ilumina con su color */
+/* El país que va primero se ilumina con su color (borde sin difuminar: casi no gasta CPU) */
 .row.leader {
-  background: color-mix(in srgb, var(--color) 20%, rgba(255, 255, 255, 0.06));
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color) 45%, transparent);
+  background: color-mix(in srgb, var(--color) 22%, rgba(255, 255, 255, 0.06));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color) 70%, transparent);
 }
 
 .row-top {
@@ -324,18 +324,8 @@ body {
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--color), color-mix(in srgb, var(--color) 60%, white));
-  box-shadow: 0 0 12px var(--color);
   transition: width 0.5s ease;
   overflow: hidden;
-}
-
-/* Brillo que recorre la barra del líder */
-.row.leader .bar-fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.55) 50%, transparent 80%);
-  animation: shine 2.2s infinite;
 }
 
 /* Animación "salto" al sumar puntos */
@@ -453,6 +443,21 @@ body {
   font-size: 20px;
 }
 
+/* Si hay más regalos de los que caben, rotan: "1/2", "2/2" */
+.gift-strip {
+  transition: opacity 0.25s;
+}
+
+.gift-strip.is-changing {
+  opacity: 0;
+}
+
+.gift-strip-page {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-soft);
+}
+
 .gift-chip {
   display: flex;
   align-items: center;
@@ -484,7 +489,7 @@ body {
   font-size: 200px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 40px var(--danger), 0 0 12px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 0 14px var(--danger), 0 0 6px rgba(0, 0, 0, 0.8);
   opacity: 0.85;
 }
 
@@ -507,7 +512,7 @@ body {
   border: 3px solid var(--gold);
   border-radius: 20px;
   background: rgba(10, 12, 28, 0.95);
-  box-shadow: 0 0 40px rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.5);
   animation: alert-in 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
 }
 
@@ -520,7 +525,7 @@ body {
   width: 52px;
   height: 52px;
   object-fit: contain;
-  animation: gift-wiggle 1s ease-in-out infinite;
+  animation: gift-wiggle 1s ease-in-out 2;
 }
 
 .gift-alert-text {
@@ -557,8 +562,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 14px;
-  background: rgba(10, 12, 28, 0.8);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 12, 28, 0.9);
 }
 
 .result.hidden {
@@ -578,7 +582,7 @@ body {
   border-radius: 20px;
   border: 3px solid var(--color);
   background: rgba(0, 0, 0, 0.6);
-  box-shadow: 0 0 40px var(--color);
+  box-shadow: 0 0 20px var(--color);
   text-align: center;
   animation: pop-in 0.5s ease;
 }
@@ -612,7 +616,7 @@ body {
   border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 10px 30px rgba(0, 0, 0, 0.6);
-  animation: flag-wave 2.4s ease-in-out infinite;
+  animation: flag-wave 2.4s ease-in-out 3;
 }
 
 .result-flags.is-tie img {
@@ -715,11 +719,6 @@ body {
 @keyframes float-up {
   0% { transform: translateY(0); opacity: 1; }
   100% { transform: translateY(-46px); opacity: 0; }
-}
-
-@keyframes shine {
-  0% { transform: translateX(-100%); }
-  60%, 100% { transform: translateX(100%); }
 }
 
 @keyframes banner-in {
