@@ -22,7 +22,7 @@ Primer juego: **Batalla de Países**. Los espectadores escriben el nombre de un 
 | 12. Persistencia en MongoDB (configuración, partidas, historial) | ✅ |
 | 13. Prueba en TikTok LIVE Studio | ✅ |
 | 15. Panel de administrador | ✅ Entregado (pendiente de tu confirmación) |
-| 16. Producción | ✅ Publicado en Render (https://tikbattle-aecz.onrender.com), probado en TikTok LIVE Studio y con prueba de carga (pendiente de tu confirmación) |
+| 16. Producción | ✅ Publicado en Render (https://tikbattle-aecz.onrender.com), probado en TikTok LIVE Studio y con prueba de carga |
 | 14. Planes FREE / PRO | Pendiente (se hará al final, por decisión del proyecto) |
 
 ## Cómo arrancar el servidor
