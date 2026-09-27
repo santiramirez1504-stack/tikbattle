@@ -1,0 +1,48 @@
+.auth {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+.auth-brand {
+  font-size: 40px;
+  text-align: center;
+}
+
+.auth-subtitle {
+  margin: 4px 0 24px;
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.tab {
+  flex: 1;
+  padding: 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

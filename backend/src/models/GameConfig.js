@@ -1,0 +1,35 @@
+const mongoose = require('mongoose');
+
+// Configuración del juego "Batalla de Países" de cada streamer (una por usuario).
+const countrySchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },      // ej. "republica-dominicana" (se genera a partir del nombre)
+    name: { type: String, required: true },    // ej. "República Dominicana" (lo que se ve en el overlay)
+    command: { type: String, required: true }, // lo que escriben los espectadores en el chat
+    color: { type: String, required: true },   // ej. "#2f7df6"
+    flag: { type: String, default: null },     // código de bandera, ej. "cu" (null = sin bandera)
+  },
+  { _id: false }
+);
+
+const giftSchema = new mongoose.Schema(
+  {
+    giftId: { type: Number, required: true }, // id real del regalo en TikTok
+    name: { type: String, required: true },
+    points: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
+const gameConfigSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+    durationSeconds: { type: Number, required: true },
+    autoRestartSeconds: { type: Number, required: true, default: 0 },
+    countries: { type: [countrySchema], required: true },
+    gifts: { type: [giftSchema], default: [] },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model('GameConfig', gameConfigSchema);

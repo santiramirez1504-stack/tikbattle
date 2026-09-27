@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>TikBattle — Panel de administrador</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Tik<span>Battle</span> <small class="admin-tag">ADMIN</small></div>
+    <div class="topbar-user">
+      <a class="btn btn-ghost" href="/dashboard/">← Mi dashboard</a>
+      <span id="user-name"></span>
+      <button class="btn btn-ghost" id="logout" type="button">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="admin">
+    <!-- ===== Estadísticas ===== -->
+    <section>
+      <div class="section-head">
+        <h2>Estadísticas</h2>
+        <span class="hint" id="updated-at"></span>
+      </div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <!-- ===== Salas en vivo ===== -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Salas en vivo</h2>
+        <span class="badge" id="rooms-count">0</span>
+      </div>
+      <p class="hint">Streamers que están usando la plataforma ahora mismo. Se actualiza sola cada 5 segundos.</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Streamer</th><th>Partida</th><th>Tiempo</th><th>TikTok</th><th>Navegadores</th><th>Última actividad</th></tr>
+          </thead>
+          <tbody id="rooms-body"></tbody>
+        </table>
+      </div>
+      <p class="hint" id="rooms-empty" hidden>No hay ninguna sala activa en este momento.</p>
+    </section>
+
+    <!-- ===== Usuarios ===== -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Usuarios</h2>
+        <span class="badge" id="users-total">0</span>
+      </div>
+      <form class="row search-row" id="users-search-form">
+        <input id="users-search" type="search" placeholder="Buscar por nombre o email" autocomplete="off">
+        <button class="btn" type="submit">Buscar</button>
+      </form>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Partidas</th><th>Última partida</th><th>Registro</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <button class="btn btn-ghost" id="users-prev" type="button">← Anterior</button>
+        <span class="hint" id="users-page"></span>
+        <button class="btn btn-ghost" id="users-next" type="button">Siguiente →</button>
+      </div>
+    </section>
+
+    <!-- ===== Últimas partidas ===== -->
+    <section class="card">
+      <h2>Últimas partidas (todos los streamers)</h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Fecha</th><th>Streamer</th><th>Resultado</th><th>Puntos</th><th>Espectadores</th><th>Duración</th></tr>
+          </thead>
+          <tbody id="games-body"></tbody>
+        </table>
+      </div>
+      <p class="hint" id="games-empty" hidden>Todavía no hay partidas.</p>
+    </section>
+
+    <!-- ===== Configuración global ===== -->
+    <section class="card">
+      <h2>Configuración global</h2>
+      <form id="settings-form" class="settings-form">
+        <div class="field">
+          <label for="announcement">Aviso para todos los streamers (aparece arriba en su dashboard; vacío = sin aviso)</label>
+          <textarea id="announcement" maxlength="300" rows="3" placeholder="Ej: Mantenimiento programado el domingo a las 3:00"></textarea>
+        </div>
+        <label class="check">
+          <input id="registrations-open" type="checkbox">
+          Permitir que se registren cuentas nuevas
+        </label>
+        <button class="btn btn-primary" type="submit">Guardar configuración global</button>
+      </form>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="/shared/api.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# Producción: el servidor de TikBattle + Caddy (https automático).
+# En el servidor:  docker compose up -d --build
+#
+# Necesita dos archivos que NO se suben a Git (tienen secretos o datos del servidor):
+#   backend/.env  -> configuración de la app (ver backend/.env.example)
+#   .env          -> solo DOMAIN=tu-dominio (ej. DOMAIN=tikbattle.duckdns.org)
+services:
+  app:
+    build: .
+    restart: unless-stopped        # si se cae (o se reinicia el servidor), vuelve a arrancar solo
+    init: true                     # apagado limpio: el servidor recibe la señal y guarda las salas
+    env_file: backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    volumes:
+      - ./backups:/app/backend/backups   # las copias de seguridad quedan fuera del contenedor
+    logging:                       # los registros rotan solos: máx. 5 archivos de 10 MB
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+    # Sin "ports": la app no se expone a internet directamente, solo a través de Caddy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Falta DOMAIN en el archivo .env junto a docker-compose.yml}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data           # aquí guarda Caddy los certificados https
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

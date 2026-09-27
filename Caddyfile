@@ -1,0 +1,6 @@
+# Caddy: recibe las visitas en https://DOMAIN, consigue y renueva solo el certificado (Let's Encrypt)
+# y se las pasa a la app. También pasa las conexiones en tiempo real (WebSocket) sin configurar nada más.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy app:3000
+}

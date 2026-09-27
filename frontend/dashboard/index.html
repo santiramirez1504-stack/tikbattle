@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>TikBattle — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Tik<span>Battle</span></div>
+    <div class="topbar-user">
+      <!-- Solo visible para administradores -->
+      <a class="btn btn-ghost" id="admin-link" href="/admin/" hidden>Panel de administrador</a>
+      <span id="user-name"></span>
+      <button class="btn btn-ghost" id="logout" type="button">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- Aviso global del administrador (vacío = oculto) -->
+  <div class="announcement" id="announcement" role="status" hidden></div>
+
+  <main class="layout">
+    <!-- ===== Partida ===== -->
+    <section class="card game-card">
+      <div class="card-head">
+        <h2>Batalla de Países</h2>
+        <span class="badge" id="game-status">Cargando...</span>
+      </div>
+
+      <div class="game-timer" id="game-time">--:--</div>
+      <p class="game-result" id="game-result" hidden></p>
+      <ol class="scores" id="scores"></ol>
+
+      <div class="game-actions">
+        <button class="btn btn-primary" id="new-game" type="button">▶ Nueva partida</button>
+        <button class="btn btn-danger" id="stop-game" type="button" disabled>■ Detener</button>
+      </div>
+    </section>
+
+    <!-- ===== TikTok LIVE ===== -->
+    <section class="card">
+      <div class="card-head">
+        <h2>TikTok LIVE</h2>
+        <span class="badge" id="tiktok-status">Desconectado</span>
+      </div>
+
+      <!-- Perfil del LIVE conectado: foto, nombre y @usuario (solo visible cuando está conectado) -->
+      <div class="tiktok-profile" id="tiktok-profile" hidden>
+        <div class="tiktok-avatar" id="tiktok-avatar">
+          <img id="tiktok-avatar-img" alt="Foto de perfil de TikTok" referrerpolicy="no-referrer" hidden>
+          <span id="tiktok-avatar-initial"></span>
+        </div>
+        <div class="tiktok-profile-text">
+          <strong id="tiktok-nickname"></strong>
+          <span id="tiktok-handle"></span>
+        </div>
+        <span class="tiktok-live-dot" title="En vivo">LIVE</span>
+      </div>
+
+      <form id="tiktok-form">
+        <label for="tiktok-username">Usuario de TikTok que está en LIVE</label>
+        <div class="row">
+          <input id="tiktok-username" type="text" placeholder="@tu_usuario" autocomplete="off" maxlength="25" required>
+          <button class="btn btn-primary" id="tiktok-connect" type="submit">Conectar</button>
+        </div>
+      </form>
+      <button class="btn btn-ghost btn-block" id="tiktok-disconnect" type="button" hidden>Desconectar</button>
+      <p class="hint" id="tiktok-hint">Tienes que estar en LIVE en ese momento para poder conectar.</p>
+    </section>
+
+    <!-- ===== Overlay ===== -->
+    <section class="card">
+      <h2>Overlay para TikTok LIVE Studio</h2>
+      <p class="hint">En TikTok LIVE Studio: <strong>Agregar fuente → Enlace</strong> → pega esta URL. Tamaño de la fuente: <strong>1080 × 760</strong> para máxima nitidez (el panel se ajusta solo; con más de 5 países usa 1080 × 1280). Es <strong>tu URL personal</strong>: no la compartas.</p>
+      <div class="row overlay-row">
+        <input id="overlay-url" type="text" readonly value="Cargando...">
+        <button class="btn" id="copy-overlay" type="button">Copiar</button>
+      </div>
+      <a id="open-overlay" href="#" target="_blank" rel="noopener">Abrir el overlay en otra pestaña ↗</a>
+      <button class="btn btn-ghost btn-block regenerate-overlay" id="regenerate-overlay" type="button">Generar una URL nueva</button>
+      <p class="hint">Si alguien vio tu URL, genera una nueva: la anterior dejará de funcionar y tendrás que pegar la nueva en TikTok LIVE Studio.</p>
+    </section>
+
+    <!-- ===== Historial ===== -->
+    <section class="card">
+      <h2>Últimas partidas</h2>
+      <ul class="history-list" id="history-list"></ul>
+      <p class="hint" id="history-empty" hidden>Todavía no hay partidas terminadas.</p>
+    </section>
+
+    <!-- ===== Configuración ===== -->
+    <section class="card wide-card">
+      <div class="card-head">
+        <h2>Configuración del juego</h2>
+        <span class="badge warn" id="config-unsaved" hidden>Cambios sin guardar</span>
+      </div>
+
+      <form id="config-form">
+        <div class="config-grid">
+          <div>
+            <h3>General</h3>
+            <div class="field">
+              <label for="duration">Duración de la partida</label>
+              <select id="duration">
+                <option value="30">30 segundos</option>
+                <option value="60">1 minuto</option>
+                <option value="120">2 minutos</option>
+                <option value="180">3 minutos</option>
+                <option value="300">5 minutos</option>
+                <option value="600">10 minutos</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="auto-restart">Nueva partida automática al terminar</label>
+              <select id="auto-restart">
+                <option value="0">Desactivada</option>
+                <option value="10">Después de 10 segundos</option>
+                <option value="15">Después de 15 segundos</option>
+                <option value="30">Después de 30 segundos</option>
+                <option value="60">Después de 1 minuto</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <h3>Países (2 a 8)</h3>
+            <ul class="editor-list" id="countries-editor"></ul>
+            <button class="btn btn-ghost btn-block" id="add-country" type="button">+ Agregar país</button>
+            <p class="hint">Color · nombre que se ve en el overlay · lo que escriben en el chat.</p>
+          </div>
+
+          <div>
+            <h3>Regalos que suman puntos</h3>
+            <ul class="editor-list" id="gifts-editor"></ul>
+            <p class="hint" id="gifts-empty">Todavía no hay regalos. Agrégalos desde "Regalos de TikTok" (abajo) con el botón <strong>+</strong>.</p>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block save-config" type="submit">Guardar configuración</button>
+        <p class="hint">Si hay una partida en curso, los países y regalos nuevos se aplican en la siguiente.</p>
+      </form>
+    </section>
+
+    <!-- ===== Catálogo de regalos de TikTok ===== -->
+    <section class="card wide-card">
+      <div class="card-head">
+        <h2>Regalos de TikTok</h2>
+        <span class="badge" id="catalog-count">Cargando...</span>
+      </div>
+      <p class="hint">Todos los regalos que existen en TikTok LIVE, con su precio en monedas y su id. Pulsa <strong>+</strong> para que un regalo sume puntos en tu juego. Imágenes oficiales de TikTok.</p>
+
+      <details id="catalog">
+        <summary class="btn">Ver todos los regalos</summary>
+        <input id="catalog-search" type="search" placeholder="Buscar por nombre o id (ej: rose, 5655)" autocomplete="off">
+        <ul class="gift-grid" id="catalog-grid"></ul>
+        <p class="hint" id="catalog-empty" hidden>No hay regalos que coincidan con la búsqueda.</p>
+      </details>
+    </section>
+  </main>
+
+  <!-- Mensajes cortos (ej. "Copiado") -->
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/api.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

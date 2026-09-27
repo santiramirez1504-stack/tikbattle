@@ -1,0 +1,45 @@
+# Copia de seguridad diaria de la base de datos (el plan gratis de Atlas no hace copias).
+# GitHub la ejecuta cada día y guarda el archivo en la pestaña "Actions" del repositorio (privado) durante 14 días.
+# Necesita el secreto MONGODB_URI en: Settings → Secrets and variables → Actions.
+name: Copia de seguridad diaria
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # todos los días a las 08:00 UTC (3:00 a. m. en Colombia)
+  workflow_dispatch:       # también se puede lanzar a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: Copiar la base de datos
+        working-directory: backend
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          BACKUP_DIR: ${{ github.workspace }}/backups
+          BACKUP_KEEP: "1"
+        run: npm run backup
+
+      - name: Guardar la copia
+        uses: actions/upload-artifact@v4
+        with:
+          name: tikbattle-backup-${{ github.run_number }}
+          path: backups/*.json.gz
+          retention-days: 14
+          if-no-files-found: error

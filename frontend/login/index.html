@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>TikBattle — Iniciar sesión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <main class="auth">
+    <div class="brand auth-brand">Tik<span>Battle</span></div>
+    <p class="auth-subtitle">Juegos interactivos para tu TikTok LIVE</p>
+
+    <div class="card">
+      <!-- Pestañas: iniciar sesión / crear cuenta -->
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="tab-login" type="button" role="tab">Iniciar sesión</button>
+        <button class="tab" id="tab-register" type="button" role="tab">Crear cuenta</button>
+      </div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="login-password">Contraseña</label>
+          <input id="login-password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+      </form>
+
+      <form id="register-form" hidden>
+        <div class="field">
+          <label for="register-name">Nombre</label>
+          <input id="register-name" type="text" autocomplete="name" minlength="2" maxlength="50" required>
+        </div>
+        <div class="field">
+          <label for="register-email">Email</label>
+          <input id="register-email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="register-password">Contraseña (mínimo 8 caracteres)</label>
+          <input id="register-password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Crear cuenta</button>
+      </form>
+
+      <p class="error" id="auth-error" role="alert"></p>
+    </div>
+  </main>
+
+  <script src="/shared/api.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

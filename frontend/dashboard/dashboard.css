@@ -1,0 +1,502 @@
+/* ===== Barra superior ===== */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-soft);
+}
+
+.topbar-user span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Distribución: 2 columnas en PC, 1 en móvil ===== */
+.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+.game-card {
+  grid-row: span 2;
+}
+
+/* ===== Partida ===== */
+.game-timer {
+  font-size: 56px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.game-result {
+  margin: 4px 0 12px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  font-weight: 700;
+  text-align: center;
+}
+
+.scores {
+  list-style: none;
+  margin: 12px 0 18px;
+}
+
+.score {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 8px 0;
+}
+
+.score-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score-points {
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--color);
+}
+
+.score-bar {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.score-bar div {
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color);
+  transition: width 0.4s ease;
+}
+
+.game-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ===== Overlay ===== */
+.overlay-row {
+  margin: 12px 0 10px;
+}
+
+/* ===== Tarjetas a todo el ancho ===== */
+.wide-card {
+  grid-column: 1 / -1;
+}
+
+/* ===== Configuración ===== */
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 8px 28px;
+}
+
+.config-grid h3 {
+  margin-top: 4px;
+}
+
+.editor-list {
+  list-style: none;
+  margin-bottom: 10px;
+}
+
+.editor-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 36px;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.editor-row input {
+  padding: 8px 10px;
+}
+
+.editor-row input[type='color'] {
+  width: 40px;
+  height: 38px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.gift-row {
+  grid-template-columns: 36px 1fr 92px 36px;
+}
+
+.gift-row .gift-name {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--text-soft);
+}
+
+.btn-icon:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.save-config {
+  margin-top: 14px;
+}
+
+/* En pantallas estrechas el comando del país pasa a su propia línea */
+@media (max-width: 480px) {
+  .country-row {
+    grid-template-columns: 40px 1fr 36px;
+  }
+
+  .country-row .country-command {
+    grid-column: 2 / 3;
+    grid-row: 2;
+  }
+}
+
+/* ===== Historial ===== */
+.history-list {
+  list-style: none;
+}
+
+.history-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-item:last-child {
+  border-bottom: 0;
+}
+
+.history-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.history-delete {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+
+.history-meta,
+.history-scores {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--color);
+}
+
+/* ===== Mensaje flotante ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  transform: translateX(-50%);
+}
+
+.toast.is-error {
+  border-color: var(--danger);
+  color: #fecaca;
+}
+
+/* ===== Imágenes de regalos ===== */
+.gift-image {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.gift-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* ===== Catálogo de regalos ===== */
+#catalog summary {
+  margin-top: 12px;
+  list-style: none;
+}
+
+#catalog summary::-webkit-details-marker {
+  display: none;
+}
+
+#catalog[open] summary {
+  margin-bottom: 14px;
+}
+
+.gift-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+  list-style: none;
+}
+
+.gift-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.gift-tile img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.gift-tile-name {
+  width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gift-tile-meta {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+/* Botón + / ✓ de cada regalo del catálogo */
+.gift-add {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 16px;
+}
+
+.gift-tile.is-added {
+  border-color: var(--success);
+}
+
+.gift-tile.is-added .gift-add {
+  background: var(--success);
+  color: #fff;
+}
+
+.regenerate-overlay {
+  margin-top: 14px;
+}
+
+/* ===== Perfil del LIVE conectado ===== */
+.tiktok-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.tiktok-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  /* anillo con los colores de TikTok */
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  padding: 3px;
+}
+
+.tiktok-avatar img,
+.tiktok-avatar span {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--surface-2);
+}
+
+.tiktok-avatar img {
+  object-fit: cover;
+  background: var(--surface);
+}
+
+/* Si no hay foto: la inicial del nombre */
+.tiktok-avatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.tiktok-profile-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tiktok-profile-text strong,
+.tiktok-profile-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tiktok-profile-text span {
+  font-size: 14px;
+  color: var(--text-soft);
+}
+
+.tiktok-live-dot {
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+/* Mientras reconecta, el perfil se ve apagado */
+.tiktok-profile.is-reconnecting {
+  opacity: 0.55;
+}
+
+.tiktok-profile.is-reconnecting .tiktok-live-dot {
+  background: var(--warning);
+}
+
+/* ===== Aviso global del administrador ===== */
+.announcement {
+  max-width: 1100px;
+  margin: 16px auto 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(37, 244, 238, 0.35);
+  border-radius: 12px;
+  background: rgba(37, 244, 238, 0.08);
+  color: var(--text);
+  font-weight: 500;
+}
+
+@media (max-width: 1132px) {
+  .announcement {
+    margin: 16px 16px 0;
+  }
+}
+
+.topbar-user a {
+  text-decoration: none;
+}
+
+/* ===== Banderas ===== */
+.score-flag {
+  width: 26px;
+  height: 20px;
+  margin-right: 8px;
+  border-radius: 3px;
+  object-fit: cover;
+  vertical-align: -4px;
+}
+
+/* Fila del editor de países: 1ª línea color · nombre · comando · quitar; 2ª línea bandera · desplegable */
+.country-row .flag-preview {
+  grid-column: 1;
+  grid-row: 2;
+  width: 40px;
+  height: 30px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.country-row .flag-select {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  padding: 7px 10px;
+}
+
+.country-row {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 480px) {
+  .country-row .flag-preview {
+    grid-row: 3;
+  }
+
+  .country-row .flag-select {
+    grid-column: 2 / 3;
+    grid-row: 3;
+  }
+}

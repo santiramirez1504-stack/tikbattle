@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Batalla de Países</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="panel" id="panel">
+    <!-- Confeti de la pantalla de ganador (se dibuja con JavaScript) -->
+    <canvas class="confetti" id="confetti"></canvas>
+
+    <!-- Cabecera en una sola fila: título · estado · tiempo -->
+    <header class="header">
+      <h1 class="title">Batalla de<br><span>Países</span></h1>
+      <p class="status" id="status">Conectando...</p>
+      <div class="timer" id="timer">
+        <span class="timer-label">Tiempo</span>
+        <span class="timer-value" id="time">--:--</span>
+      </div>
+    </header>
+
+    <!-- Cuerpo en dos columnas: marcador a la izquierda, actividad y regalos a la derecha -->
+    <div class="body">
+      <!-- Marcador: las filas de los países se crean desde game.js -->
+      <div class="board-wrap">
+        <div class="leader-banner" id="leader-banner" hidden></div>
+        <ol class="board" id="board"></ol>
+      </div>
+
+      <aside class="side">
+        <!-- Feed de actividad: "juan apoyó a Cuba", "maria envió Rosa +50"... -->
+        <ul class="feed" id="feed"></ul>
+
+        <!-- Regalos que suman puntos, con su imagen y su valor -->
+        <footer class="gift-strip" id="gift-strip" hidden></footer>
+      </aside>
+    </div>
+
+    <!-- Cuenta atrás grande de los últimos 10 segundos -->
+    <div class="countdown" id="countdown" hidden></div>
+
+    <!-- Alerta grande cuando llega un regalo -->
+    <section class="gift-alert" id="gift-alert" hidden>
+      <img class="gift-alert-image" id="gift-alert-image" alt="" referrerpolicy="no-referrer">
+      <div class="gift-alert-text">
+        <strong id="gift-alert-user"></strong>
+        <span id="gift-alert-gift"></span>
+        <span class="gift-alert-points" id="gift-alert-points"></span>
+      </div>
+    </section>
+
+    <!-- Pantalla de resultado: solo cuando la partida termina -->
+    <section class="result hidden" id="result">
+      <div class="result-card" id="result-card">
+        <!-- Izquierda: país ganador · derecha: podio de espectadores -->
+        <div class="result-main">
+          <div class="result-flags" id="result-flags"></div>
+          <span class="result-label" id="result-label"></span>
+          <span class="result-names" id="result-names"></span>
+          <span class="result-points" id="result-points"></span>
+        </div>
+        <ol class="podium" id="podium"></ol>
+      </div>
+    </section>
+  </main>
+
+  <!-- El servidor de Socket.IO sirve automáticamente su librería de cliente en esta ruta -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Lo que NUNCA entra en la imagen de Docker
+**/node_modules
+**/.env
+backups
+docs
+.git
+*.md

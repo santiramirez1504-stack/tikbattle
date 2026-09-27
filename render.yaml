@@ -1,0 +1,36 @@
+# Configuración de Render (Blueprint): Render lee este archivo y crea el servicio solo.
+# En Render: New → Blueprint → elegir este repositorio.
+# Los secretos NO están aquí: Render los pide al crear el servicio (sync: false) o los genera él.
+services:
+  - type: web
+    name: tikbattle
+    runtime: docker            # usa nuestro Dockerfile (el mismo que serviría en Oracle o Hostinger)
+    plan: free
+    region: virginia           # el más cercano a Latinoamérica
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true           # cada vez que se sube código a GitHub, Render lo publica solo
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SIMULATION_MODE
+        value: "false"
+      - key: TRUST_PROXY       # Render tiene un intermediario delante de la app
+        value: "1"
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: GAME_DURATION_SECONDS
+        value: "300"
+      - key: ROOM_IDLE_MINUTES
+        value: "10"
+      - key: SNAPSHOT_INTERVAL_SECONDS
+        value: "10"
+      - key: JWT_SECRET        # Render genera una clave aleatoria larga (nadie la escribe ni la ve)
+        generateValue: true
+      - key: MONGODB_URI       # secreto: se escribe en Render al crear el servicio
+        sync: false
+      - key: EULER_API_KEY     # secreto: clave gratis de eulerstream.com
+        sync: false
+      - key: PUBLIC_URL        # ej. https://tikbattle.onrender.com (la da Render)
+        sync: false

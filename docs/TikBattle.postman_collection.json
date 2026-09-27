@@ -1,0 +1,250 @@
+{
+  "info": {
+    "name": "TikBattle - API de pruebas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "A. Registro",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guarda el token automáticamente para las demás peticiones",
+              "if (pm.response.code === 200 || pm.response.code === 201) {",
+              "  pm.collectionVariables.set(\"token\", pm.response.json().token);",
+              "  console.log(\"Token guardado\");",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Santiago\",\n  \"email\": \"tu_email@ejemplo.com\",\n  \"password\": \"una-contraseña-segura\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "http://localhost:3000/api/auth/register"
+      }
+    },
+    {
+      "name": "B. Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Guarda el token automáticamente para las demás peticiones",
+              "if (pm.response.code === 200 || pm.response.code === 201) {",
+              "  pm.collectionVariables.set(\"token\", pm.response.json().token);",
+              "  console.log(\"Token guardado\");",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"tu_email@ejemplo.com\",\n  \"password\": \"una-contraseña-segura\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "http://localhost:3000/api/auth/login"
+      }
+    },
+    {
+      "name": "C. Mi perfil",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/api/auth/me"
+      }
+    },
+    {
+      "name": "1. Iniciar partida",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/game/start"
+      }
+    },
+    {
+      "name": "2. Chat - juan escribe Cuba",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"juan\",\n  \"message\": \"Cuba\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "http://localhost:3000/api/simulation/chat"
+      }
+    },
+    {
+      "name": "3. Regalo - juan envía Rosa",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"juan\",\n  \"gift\": \"Rosa\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "http://localhost:3000/api/simulation/gift"
+      }
+    },
+    {
+      "name": "4. Regalo - pepe (sin país) envía Rosa",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"pepe\",\n  \"gift\": \"Rosa\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "http://localhost:3000/api/simulation/gift"
+      }
+    },
+    {
+      "name": "5. Chat - maria escribe MÉXICO",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"maria\",\n  \"message\": \"MÉXICO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "http://localhost:3000/api/simulation/chat"
+      }
+    },
+    {
+      "name": "6. Ver estado de la partida",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/api/game/state"
+      }
+    },
+    {
+      "name": "7. Reiniciar partida",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/game/reset"
+      }
+    },
+    {
+      "name": "8. TikTok - Conectar a un LIVE",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"ESCRIBE_AQUI_EL_USUARIO_EN_LIVE\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "http://localhost:3000/api/tiktok/connect"
+      }
+    },
+    {
+      "name": "9. TikTok - Ver estado de la conexión",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/api/tiktok/status"
+      }
+    },
+    {
+      "name": "10. TikTok - Desconectar",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/tiktok/disconnect"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

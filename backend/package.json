@@ -1,0 +1,32 @@
+{
+  "name": "tikbattle-backend",
+  "version": "0.1.0",
+  "description": "Backend de TikBattle Games",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test:module2": "node tests/module2-gameEngine.js",
+    "test:module3": "node tests/module3-chatProcessor.js",
+    "test:module4": "node tests/module4-giftProcessor.js",
+    "test:module5": "node tests/module5-gameTimer.js",
+    "test:module8": "node tests/module8-simulateTraffic.js",
+    "test:module9": "node tests/module9-tiktokService.js",
+    "test:reconnect": "node tests/tiktokReconnect.js",
+    "make-admin": "node scripts/makeAdmin.js",
+    "backup": "node scripts/backupDb.js",
+    "restore": "node scripts/restoreDb.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "flag-icons": "^7.5.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.4",
+    "socket.io": "^4.8.4",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}
