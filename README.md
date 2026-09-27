@@ -97,7 +97,7 @@ El archivo `.env` **no se sube a Git**, porque contiene secretos. Usa `.env.exam
 | `PUBLIC_URL` | Dirección pública **https** del servidor (túnel de Cloudflare en desarrollo, dominio en producción). Se usa para la URL del overlay |
 | `ROOM_IDLE_MINUTES` | (Opcional) Minutos sin uso tras los que una sala se libera de la memoria (10) |
 | `NODE_ENV` | `production` en el servidor (lo pone `docker-compose.yml`). Activa las comprobaciones de seguridad y HSTS |
-| `TRUST_PROXY` | Intermediarios delante del servidor: `1` = Caddy · `2` = Cloudflare + Caddy · vacío en desarrollo |
+| `TRUST_PROXY` | Intermediarios delante del servidor: `3` en Render (Cloudflare + 2 de Render, verificado) · `1` = solo Caddy · `2` = Cloudflare + Caddy · vacío en desarrollo |
 | `SNAPSHOT_INTERVAL_SECONDS` | Cada cuántos segundos se guarda la partida en curso (10) |
 | `BACKUP_DIR` / `BACKUP_KEEP` | Carpeta de las copias de seguridad y cuántas se guardan (7) |
 

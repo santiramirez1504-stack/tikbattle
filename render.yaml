@@ -16,8 +16,8 @@ services:
         value: production
       - key: SIMULATION_MODE
         value: "false"
-      - key: TRUST_PROXY       # Render tiene un intermediario delante de la app
-        value: "1"
+      - key: TRUST_PROXY       # Delante de la app hay 3 intermediarios: Cloudflare, el balanceador de Render y su proxy interno
+        value: "3"           # (verificado el 27/09/2026: con 3 el servidor ve la IP real del visitante)
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: GAME_DURATION_SECONDS
