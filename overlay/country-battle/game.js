@@ -15,7 +15,7 @@ const FLOAT_GROUP_MS = 250;     // los "+N" de un país se agrupan en este tiemp
 const CONFETTI_MS = 5000;
 const GIFTS_PER_PAGE = 3;       // regalos que caben arriba en el centro
 const GIFT_PAGE_MS = 4000;      // si hay más, rotan en grupos cada 4 s
-const DOUBLE_INTRO_MS = 2600;   // cuánto dura el anuncio "2X ¡Activado!" con rayos
+const DOUBLE_INTRO_MS = 2600;   // cuánto dura el anuncio "X2 ¡Activado!" con rayos
 
 const STATUS_TEXT = {
   WAITING: '⏳ ¡Elige tu país! Escribe su nombre en el chat',
@@ -303,8 +303,8 @@ function renderTimer(state) {
   lastCountdownNumber = showCountdown ? state.remainingTime : null;
 }
 
-// ---------- 2X final ----------
-// El servidor sortea al empezar cada partida si habrá 2X (35 %). El overlay solo se entera cuando
+// ---------- X2 final ----------
+// El servidor sortea al empezar cada partida si habrá X2 (35 %). El overlay solo se entera cuando
 // se activa (state.doublePoints): entonces muestra el anuncio con rayos y la insignia junto al tiempo.
 
 let lastDoublePoints = false;

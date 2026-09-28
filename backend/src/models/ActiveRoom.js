@@ -50,7 +50,7 @@ const runningGameSchema = new mongoose.Schema(
     gifts: { type: [giftSchema], default: [] },
     userCountries: { type: [supporterSchema], default: [] }, // qué país eligió cada espectador
     contributions: { type: [contributionSchema], default: [] },
-    doubleFinal: { type: Boolean, default: false }, // ¿la partida tiene 2X en los últimos segundos?
+    doubleFinal: { type: Boolean, default: false }, // ¿la partida tiene X2 en los últimos segundos?
   },
   { _id: false }
 );

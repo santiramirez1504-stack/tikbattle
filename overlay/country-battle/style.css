@@ -507,7 +507,7 @@ body {
   font-weight: 900 !important;
 }
 
-/* ===== 2X final: insignia junto al tiempo ===== */
+/* ===== X2 final: insignia junto al tiempo ===== */
 .timer-double {
   margin-left: 4px;
   padding: 1px 8px;
@@ -520,7 +520,7 @@ body {
   animation: badge-in 0.5s ease;
 }
 
-/* ===== 2X final: "2X ¡ACTIVADO!" con rayos (dura ~2,6 s y desaparece) ===== */
+/* ===== X2 final: "X2 ¡ACTIVADO!" con rayos (dura ~2,6 s y desaparece) ===== */
 .double {
   position: absolute;
   inset: 0;
