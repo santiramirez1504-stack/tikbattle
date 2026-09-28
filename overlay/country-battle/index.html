@@ -11,37 +11,33 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="panel" id="panel">
-    <!-- Confeti de la pantalla de ganador (se dibuja con JavaScript) -->
+  <!-- Escenario del tamaño de la pantalla vertical de TikTok (9:16). Fondo transparente: se ve la cámara -->
+  <main class="stage" id="stage">
+    <!-- Confeti de la pantalla final (se dibuja con JavaScript) -->
     <canvas class="confetti" id="confetti"></canvas>
 
-    <!-- Cabecera en una sola fila: título · estado (o la última actividad) · tiempo -->
-    <header class="header">
-      <h1 class="title">Batalla de<br><span>Países</span></h1>
-      <div class="status-wrap">
-        <p class="status" id="status">Conectando...</p>
-        <!-- Actividad: "juan se unió a Cuba", "maria envió Rosa +50"... (se muestra encima del estado) -->
-        <ul class="feed" id="feed"></ul>
-      </div>
+    <!-- Arriba en el centro: tiempo, estado (o la última actividad) y regalos que suman -->
+    <header class="top" id="top">
       <div class="timer" id="timer">
-        <span class="timer-label">Tiempo</span>
+        <span class="timer-icon">⏱</span>
         <span class="timer-value" id="time">--:--</span>
       </div>
+      <div class="status-wrap">
+        <p class="status" id="status">Conectando...</p>
+        <!-- Actividad: "juan se unió a Cuba", "maria +50 a Cuba"... (se muestra encima del estado) -->
+        <ul class="feed" id="feed"></ul>
+      </div>
+      <div class="gift-strip" id="gift-strip" hidden></div>
     </header>
 
-    <!-- Marcador en 2 columnas: las tarjetas de los países se crean desde game.js -->
-    <div class="board-wrap">
-      <div class="leader-banner" id="leader-banner" hidden></div>
-      <ol class="board" id="board"></ol>
-    </div>
+    <!-- Banderas a los lados: las crea game.js (mitad de los países a cada lado) -->
+    <ol class="side side-left" id="side-left"></ol>
+    <ol class="side side-right" id="side-right"></ol>
 
-    <!-- Regalos que suman puntos, con su imagen y su valor -->
-    <footer class="gift-strip" id="gift-strip" hidden></footer>
+    <!-- "¡X toma el liderato!" -->
+    <div class="leader-banner" id="leader-banner" hidden></div>
 
-    <!-- Cuenta atrás grande de los últimos 10 segundos -->
-    <div class="countdown" id="countdown" hidden></div>
-
-    <!-- Alerta grande cuando llega un regalo -->
+    <!-- Alerta cuando llega un regalo -->
     <section class="gift-alert" id="gift-alert" hidden>
       <img class="gift-alert-image" id="gift-alert-image" alt="" referrerpolicy="no-referrer">
       <div class="gift-alert-text">
@@ -51,18 +47,13 @@
       </div>
     </section>
 
-    <!-- Pantalla de resultado: solo cuando la partida termina -->
+    <!-- Cuenta atrás grande de los últimos 10 segundos -->
+    <div class="countdown" id="countdown" hidden></div>
+
+    <!-- Pantalla final: podio con los 3 primeros países -->
     <section class="result hidden" id="result">
-      <div class="result-card" id="result-card">
-        <!-- Izquierda: país ganador · derecha: podio de espectadores -->
-        <div class="result-main">
-          <div class="result-flags" id="result-flags"></div>
-          <span class="result-label" id="result-label"></span>
-          <span class="result-names" id="result-names"></span>
-          <span class="result-points" id="result-points"></span>
-        </div>
-        <ol class="podium" id="podium"></ol>
-      </div>
+      <p class="result-title" id="result-title"></p>
+      <ol class="podium" id="podium"></ol>
     </section>
   </main>
 

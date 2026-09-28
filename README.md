@@ -65,7 +65,7 @@ Usa `npm start` para probar el juego. `npm run dev` puede reiniciarse solo (el p
 3. Si esa dirección es distinta de la que tienes en `PUBLIC_URL` del `.env` (cambia cada vez que abres el túnel), cámbiala allí y reinicia el servidor.
 4. En el dashboard, tarjeta **"Overlay para TikTok LIVE Studio"**, pulsa **Copiar**. La URL ya empieza por `https://…trycloudflare.com`.
 5. En TikTok LIVE Studio: **Agregar fuente → Enlace** y pega la URL.
-6. Tamaño de la fuente: **1080 × 1050** (el ancho real del lienzo vertical de TikTok). Los países van en **2 columnas** (8 países = 4 filas), así el panel llena el ancho del LIVE sin alargarse demasiado; con menos países sobra espacio transparente abajo. El panel **se ajusta solo** al tamaño y nunca se corta. Si la fuente tiene opciones de ancho/alto, ponlas ahí en lugar de estirarla arrastrando las esquinas (estirar la imagen la vuelve borrosa).
+6. Tamaño de la fuente: **1080 × 1920** (toda la pantalla vertical de TikTok, colocada en la posición 0, 0). El overlay es transparente: las **banderas van en columnas a los lados** (mitad de los países a cada lado) y el centro queda libre para la cámara. Arriba en el centro: tiempo, actividad y regalos. Si la fuente tiene opciones de ancho/alto, ponlas ahí en lugar de estirarla arrastrando las esquinas (estirar la imagen la vuelve borrosa).
 7. El fondo es transparente: solo se ve el panel encima de tu cámara.
 8. Si cambias algo del overlay y no se ve, recarga la fuente en LIVE Studio (clic derecho → actualizar, o quítala y vuelve a agregarla).
 
@@ -179,6 +179,7 @@ Si se pasa del límite, el servidor no se cae: los puntos llegan al overlay con 
 
 - **Overlay más vistoso e interactivo:**
   - **Banderas** de cada país (SVG del paquete flag-icons, servidas por nuestro servidor en /flags). En el dashboard se eligen con un desplegable y se adivinan solas a partir del nombre.
+  - **Diseño con banderas a los lados** (28/09/2026): cada país con su bandera, puntos y el MVP (foto + nombre); insignias 1-2-3 y corona del líder. Al terminar, **podio de los 3 primeros países** (1º en el centro) con su MVP, animación de entrada y confeti.
   - **Diseño para el LIVE vertical** (27/09/2026): panel de 540 px que se escala al ancho de TikTok, países en **tarjetas de 2 columnas** y la actividad dentro de la cápsula de estado. Los nombres y comandos largos reducen su letra solos para caber enteros.
   - **Feed de actividad** ("juan se unió a Cuba", "maria envió Rosa → +50"), **alerta grande de regalo** con su imagen, **MVP** de cada país con su **foto de perfil de TikTok**, **+N flotantes**, aviso **"¡X toma el liderato!"**, **cuenta atrás grande** de los últimos 10 s, **pantalla de ganador** con bandera, confeti y **podio de los 3 espectadores** que más aportaron (con su foto), y **pantalla de espera** con qué escribir y cuánto vale cada regalo.
   - Las fotos de perfil se muestran directamente desde TikTok (solo direcciones `https://`); si no hay foto o no carga, se ve la inicial. No se guardan en MongoDB (las direcciones de TikTok caducan y ocupan mucho): tras un reinicio del servidor, cada foto vuelve con el siguiente comentario de ese espectador. En el simulador se puede probar enviando `"avatarUrl": "https://..."` (opcional).

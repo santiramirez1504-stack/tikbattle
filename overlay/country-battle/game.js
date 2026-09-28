@@ -3,18 +3,17 @@
 const overlayKey = new URLSearchParams(window.location.search).get('key');
 
 const GAME_EVENTS = ['game:state', 'game:start', 'game:update', 'game:score', 'game:end', 'game:reset'];
-const ROW_HEIGHT = 86;          // alto de cada tarjeta: debe coincidir con --row-height en style.css
-const TILE_GAP = 10;            // espacio entre tarjetas: debe coincidir con --tile-gap en style.css
-const COLUMNS = 2;              // los países van en 2 columnas (8 países = 4 filas)
+const STAGE_WIDTH = 540;        // tamaño de diseño del escenario (9:16, como la pantalla vertical de TikTok)
+const STAGE_HEIGHT = 960;
 const URGENT_SECONDS = 10;      // desde aquí el temporizador se pone rojo y aparece la cuenta atrás grande
-const MIN_BAR_PERCENT = 3;      // para que una barra con pocos puntos se vea igualmente
+const RANK_BADGES = 3;          // insignias 1, 2 y 3 en los primeros puestos
 const FEED_MAX_ITEMS = 1;       // la actividad se ve de una en una, dentro de la cápsula de estado
 const FEED_ITEM_MS = 3000;      // cuánto se ve cada actividad (si llega otra antes, la reemplaza)
 const GIFT_ALERT_MS = 2800;     // cuánto dura cada alerta de regalo
 const GIFT_ALERT_QUEUE_MAX = 5; // alertas en espera como máximo (si llegan más, se descartan las más viejas)
 const FLOAT_GROUP_MS = 250;     // los "+N" de un país se agrupan en este tiempo (para no saturar la pantalla)
-const CONFETTI_MS = 4500;
-const GIFTS_PER_PAGE = 5;       // regalos que caben en la fila de abajo
+const CONFETTI_MS = 5000;
+const GIFTS_PER_PAGE = 3;       // regalos que caben arriba en el centro
 const GIFT_PAGE_MS = 4000;      // si hay más, rotan en grupos cada 4 s
 
 const STATUS_TEXT = {
@@ -24,19 +23,21 @@ const STATUS_TEXT = {
 };
 
 const el = (id) => document.getElementById(id);
-const panelEl = el('panel');
+const stageEl = el('stage');
 const timerEl = el('timer');
 const timeEl = el('time');
 const statusEl = el('status');
-const boardEl = el('board');
+const sideLeftEl = el('side-left');
+const sideRightEl = el('side-right');
 const feedEl = el('feed');
 const giftStripEl = el('gift-strip');
 const countdownEl = el('countdown');
 const leaderBannerEl = el('leader-banner');
 const resultEl = el('result');
 
-// Filas ya creadas, por id de país. Se crean una vez y luego solo se actualizan.
-const rows = new Map();
+// Banderas ya creadas, por id de país. Se crean una vez y luego solo se actualizan.
+const teams = new Map();
+let layoutKey = null;           // orden y reparto de los países (si cambia la configuración se recolocan)
 // Último estado recibido (para buscar países al mostrar el feed)
 let lastState = null;
 let lastStatus = null;
@@ -70,9 +71,9 @@ function createFlag(country, className) {
     img.alt = country.name;
     return img;
   }
-  // Sin bandera: círculo del color del país con su inicial
+  // Sin bandera: rectángulo del color del país con su inicial
   const fallback = document.createElement('span');
-  fallback.className = `${className} row-flag-fallback`;
+  fallback.className = `${className} flag-fallback`;
   fallback.style.setProperty('--color', country ? country.color : '#555');
   fallback.textContent = country ? country.name.charAt(0).toUpperCase() : '?';
   return fallback;
@@ -107,174 +108,152 @@ function restartAnimation(element, className) {
   element.classList.add(className);
 }
 
-// ---------- Marcador ----------
+// ---------- Banderas a los lados ----------
+// Cada país se queda SIEMPRE en su sitio (así cada espectador encuentra rápido el suyo).
+// El ranking se ve con las insignias 1-2-3, la corona del líder y los puntos en dorado.
 
-function createRow(country) {
-  const rowEl = document.createElement('li');
-  rowEl.className = 'row';
+function createTeam(country) {
+  const teamEl = document.createElement('li');
+  teamEl.className = 'team';
 
-  const top = document.createElement('div');
-  top.className = 'row-top';
-
+  const flagWrap = document.createElement('div');
+  flagWrap.className = 'team-flag-wrap';
+  const crown = document.createElement('span');
+  crown.className = 'team-crown';
+  crown.textContent = '👑';
+  const rankEl = document.createElement('span');
+  rankEl.className = 'team-rank';
+  rankEl.hidden = true;
   const flagSlot = document.createElement('span'); // la bandera se pone en renderBoard (puede cambiar)
+  flagWrap.append(crown, rankEl, flagSlot);
 
-  const text = document.createElement('div');
-  text.className = 'row-text';
   // textContent (no innerHTML) para que ningún texto pueda inyectar HTML en la página
-  const nameEl = document.createElement('span');
-  nameEl.className = 'row-name';
-  const subEl = document.createElement('span');
-  subEl.className = 'row-sub';
-  text.append(nameEl, subEl);
-
   const pointsEl = document.createElement('span');
-  pointsEl.className = 'row-points';
+  pointsEl.className = 'team-points';
+  const pointsText = document.createTextNode('0');
+  pointsEl.append(pointsText);
 
-  const bar = document.createElement('div');
-  bar.className = 'bar';
-  const fillEl = document.createElement('div');
-  fillEl.className = 'bar-fill';
-  bar.append(fillEl);
+  const subEl = document.createElement('div');
+  subEl.className = 'team-sub';
 
-  // Arriba: bandera + nombre (y debajo qué escribir o el MVP). Abajo: barra + puntos
-  const bottom = document.createElement('div');
-  bottom.className = 'row-bottom';
-  bottom.append(bar, pointsEl);
+  teamEl.append(flagWrap, pointsEl, subEl);
 
-  top.append(flagSlot, text);
-  rowEl.append(top, bottom);
-  boardEl.append(rowEl);
-
-  const row = { el: rowEl, flagSlot, flagKey: null, nameEl, subEl, pointsEl, fillEl, lastPoints: country.points, pendingFloat: 0, floatTimer: null };
-  rows.set(country.id, row);
-  return row;
+  const team = {
+    el: teamEl, rankEl, flagSlot, flagKey: null, pointsEl, pointsText, subEl, subKey: null,
+    lastPoints: country.points, pendingFloat: 0, floatTimer: null,
+  };
+  teams.set(country.id, team);
+  return team;
 }
 
-// "+50" flotando junto a los puntos (se agrupan los que llegan casi a la vez)
-function queueFloatPoints(row, amount) {
-  row.pendingFloat += amount;
-  if (row.floatTimer) return;
-  row.floatTimer = setTimeout(() => {
+// "+50" flotando sobre los puntos (se agrupan los que llegan casi a la vez)
+function queueFloatPoints(team, amount) {
+  team.pendingFloat += amount;
+  if (team.floatTimer) return;
+  team.floatTimer = setTimeout(() => {
     const float = document.createElement('span');
     float.className = 'float-points';
-    float.textContent = `+${formatPoints(row.pendingFloat)}`;
-    row.pointsEl.append(float);
+    float.textContent = `+${formatPoints(team.pendingFloat)}`;
+    team.pointsEl.append(float);
     float.addEventListener('animationend', () => float.remove());
-    row.pendingFloat = 0;
-    row.floatTimer = null;
+    team.pendingFloat = 0;
+    team.floatTimer = null;
   }, FLOAT_GROUP_MS);
 }
 
-// Textos largos (ej. "República Dominicana"): la letra se reduce solo lo necesario para que quepan
-// enteros. Se recalcula únicamente si cambia el texto o la corona del líder.
-const NAME_MAX_FONT = 21;
-const NAME_MIN_FONT = 11;
-const SUB_MAX_FONT = 14;
-const SUB_MIN_FONT = 10;
+// Debajo de los puntos: la foto y el nombre del MVP, o (en la espera) lo que hay que escribir
+function renderTeamSub(team, country, status) {
+  const mvp = status !== 'WAITING' ? country.mvp : null;
+  const key = mvp ? `mvp|${mvp.username}|${mvp.avatarUrl}` : `cmd|${country.command}`;
+  if (team.subKey === key) return; // no ha cambiado: no se redibuja (la foto no parpadea)
+  team.subKey = key;
 
-function fitText(element, maxFont, minFont) {
-  let size = maxFont;
-  element.style.fontSize = `${size}px`;
-  while (element.scrollWidth > element.clientWidth && size > minFont) {
-    size -= 1;
-    element.style.fontSize = `${size}px`;
-  }
-}
-
-function fitName(row) {
-  const key = `${row.nameEl.textContent}|${row.el.classList.contains('leader')}|${row.subEl.textContent}`;
-  if (row.fitKey === key) return;
-  row.fitKey = key;
-
-  fitText(row.nameEl, NAME_MAX_FONT, NAME_MIN_FONT);
-  // "Escribe: ..." también se ajusta (el MVP ya recorta su nombre con "...")
-  if (row.subEl.querySelector('.mvp')) {
-    row.subEl.style.fontSize = '';
-  } else {
-    fitText(row.subEl, SUB_MAX_FONT, SUB_MIN_FONT);
-  }
-}
-
-// Cuando termina de cargar la fuente Rubik los textos cambian de ancho: se vuelven a ajustar
-document.fonts.ready.then(() => {
-  for (const row of rows.values()) {
-    row.fitKey = null;
-    if (row.pointsText) fitName(row);
-  }
-});
-
-function renderRowSub(row, country, status) {
-  row.subEl.textContent = '';
-  if (status !== 'WAITING' && country.mvp) {
-    const mvp = document.createElement('span');
-    mvp.className = 'mvp';
-    const text = document.createElement('span');
-    text.className = 'mvp-text';
-    text.textContent = `⭐ MVP: ${country.mvp.username} · ${formatPoints(country.mvp.points)}`;
-    mvp.append(createAvatar(country.mvp.username, country.mvp.avatarUrl, 'mvp-avatar'), text);
-    row.subEl.append(mvp);
+  team.subEl.textContent = '';
+  if (mvp) {
+    const name = document.createElement('span');
+    name.className = 'team-name';
+    name.textContent = mvp.username;
+    team.subEl.append(createAvatar(mvp.username, mvp.avatarUrl, 'mvp-avatar'), name);
   } else if (country.command) {
-    row.subEl.textContent = `Escribe: ${country.command.toUpperCase()}`;
+    const command = document.createElement('span');
+    command.className = 'team-command';
+    command.textContent = country.command;
+    team.subEl.append(command);
   }
+}
+
+// Reparte los países: la primera mitad a la izquierda y el resto a la derecha
+function placeTeams(countries) {
+  const key = countries.map((country) => country.id).join(',');
+  if (key === layoutKey) return;
+  layoutKey = key;
+
+  const half = Math.ceil(countries.length / 2);
+  countries.forEach((country, index) => {
+    const team = teams.get(country.id);
+    (index < half ? sideLeftEl : sideRightEl).append(team.el);
+  });
+  // Con pocos países por lado, se reparten en el alto disponible
+  const perSide = half;
+  sideLeftEl.classList.toggle('is-spread', perSide <= 3);
+  sideRightEl.classList.toggle('is-spread', perSide <= 3);
 }
 
 function renderBoard(state) {
   const countries = state.countries;
-  // El que más puntos tiene va arriba; la barra más larga es la del líder
   const sorted = [...countries].sort((a, b) => b.points - a.points);
-  const maxPoints = sorted.length > 0 ? sorted[0].points : 0;
 
-  const rowCount = Math.ceil(sorted.length / COLUMNS);
-  boardEl.style.height = `${Math.max(0, rowCount * (ROW_HEIGHT + TILE_GAP) - TILE_GAP)}px`;
-
-  // Si el streamer quitó países en la configuración, se borran sus filas
+  // Si el streamer quitó países en la configuración, se borran sus banderas
   const currentIds = new Set(countries.map((country) => country.id));
-  for (const [id, row] of rows) {
+  for (const [id, team] of teams) {
     if (!currentIds.has(id)) {
-      row.el.remove();
-      rows.delete(id);
+      team.el.remove();
+      teams.delete(id);
     }
   }
+  for (const country of countries) {
+    if (!teams.has(country.id)) createTeam(country);
+  }
+  placeTeams(countries);
 
+  // Puesto de cada país (solo cuenta si tiene puntos)
+  const rankById = new Map();
   sorted.forEach((country, index) => {
-    const row = rows.get(country.id) || createRow(country);
-
-    // Nombre, color y bandera pueden cambiar desde la configuración del dashboard
-    row.el.style.setProperty('--color', country.color);
-    row.nameEl.textContent = country.name;
-    const flagKey = `${country.flag}|${country.color}|${country.name}`;
-    if (row.flagKey !== flagKey) {
-      const flag = createFlag(country, 'row-flag');
-      row.flagSlot.replaceWith(flag);
-      row.flagSlot = flag;
-      row.flagKey = flagKey;
-    }
-    renderRowSub(row, country, state.gameStatus);
-
-    // Puesto 1 arriba a la izquierda, 2 arriba a la derecha, 3 debajo del 1...
-    const column = index % COLUMNS;
-    const line = Math.floor(index / COLUMNS);
-    const x = column === 0 ? '0px' : `calc(100% + ${TILE_GAP}px)`;
-    row.el.style.transform = `translate(${x}, ${line * (ROW_HEIGHT + TILE_GAP)}px)`;
-    row.el.classList.toggle('leader', index === 0 && country.points > 0);
-    // El número es el primer "nodo de texto" de pointsEl (detrás pueden ir los "+N" flotantes)
-    if (!row.pointsText) {
-      row.pointsText = document.createTextNode('');
-      row.pointsEl.prepend(row.pointsText);
-    }
-    row.pointsText.nodeValue = formatPoints(country.points);
-    fitName(row);
-
-    const percent = maxPoints > 0 ? (country.points / maxPoints) * 100 : 0;
-    row.fillEl.style.width = country.points > 0 ? `${Math.max(percent, MIN_BAR_PERCENT)}%` : '0';
-
-    const gained = country.points - row.lastPoints;
-    if (gained > 0) {
-      restartAnimation(row.pointsEl, 'bump');
-      queueFloatPoints(row, gained);
-    }
-    row.lastPoints = country.points;
+    if (country.points > 0 && index < RANK_BADGES) rankById.set(country.id, index + 1);
   });
+  const leader = sorted[0];
+  const hasUniqueLeader = leader && leader.points > 0 && (!sorted[1] || sorted[1].points < leader.points);
+
+  for (const country of countries) {
+    const team = teams.get(country.id);
+
+    // La bandera puede cambiar desde la configuración del dashboard
+    const flagKey = `${country.flag}|${country.color}|${country.name}`;
+    if (team.flagKey !== flagKey) {
+      const flag = createFlag(country, 'team-flag');
+      team.flagSlot.replaceWith(flag);
+      team.flagSlot = flag;
+      team.flagKey = flagKey;
+    }
+
+    const rank = rankById.get(country.id);
+    team.rankEl.hidden = !rank;
+    if (rank) {
+      team.rankEl.textContent = String(rank);
+      team.rankEl.className = `team-rank rank-${rank}`;
+    }
+    team.el.classList.toggle('leader', Boolean(hasUniqueLeader && leader.id === country.id));
+
+    team.pointsText.nodeValue = formatPoints(country.points);
+    renderTeamSub(team, country, state.gameStatus);
+
+    const gained = country.points - team.lastPoints;
+    if (gained > 0) {
+      restartAnimation(team.pointsEl, 'bump');
+      queueFloatPoints(team, gained);
+    }
+    team.lastPoints = country.points;
+  }
 
   detectLeaderChange(state, sorted);
 }
@@ -324,7 +303,7 @@ function renderTimer(state) {
 }
 
 // ---------- Regalos que suman puntos ----------
-// Se muestran TODOS: si no caben en una fila, rotan en grupos (1/3, 2/3...) cada GIFT_PAGE_MS
+// Se muestran TODOS: si no caben, rotan en grupos (1/3, 2/3...) cada GIFT_PAGE_MS
 
 let lastGiftsKey = null;
 let giftPages = [];
@@ -337,7 +316,7 @@ function renderGiftStrip(state) {
   if (key === lastGiftsKey) return; // no ha cambiado: no se redibuja (evita parpadeos)
   lastGiftsKey = key;
 
-  // Grupos del mismo tamaño (ej. 7 regalos -> 4 + 3, no 5 + 2)
+  // Grupos del mismo tamaño (ej. 5 regalos -> 3 + 2)
   const pageCount = Math.ceil(gifts.length / GIFTS_PER_PAGE);
   const perPage = Math.ceil(gifts.length / Math.max(pageCount, 1));
   giftPages = [];
@@ -420,7 +399,7 @@ function addFeedItem(activity) {
   const who = document.createElement('strong');
   who.textContent = activity.username;
   const countryName = country ? country.name : '';
-  // Texto corto: cabe en la cápsula de estado (el detalle del regalo sale en la alerta grande)
+  // Texto corto: cabe en la cápsula de estado (el detalle del regalo sale en la alerta)
   const rest = activity.type === 'GIFT'
     ? ` +${formatPoints(activity.points)} a ${countryName}`
     : ` se unió a ${countryName}`;
@@ -439,7 +418,7 @@ function addFeedItem(activity) {
   }, FEED_ITEM_MS);
 }
 
-// ---------- Alerta grande de regalo ----------
+// ---------- Alerta de regalo ----------
 
 const giftAlertQueue = [];
 let currentAlert = null;   // alerta que se ve ahora: { activity, hideTimer }
@@ -489,7 +468,6 @@ function fillGiftAlert(activity) {
   el('gift-alert-user').textContent = activity.username;
   el('gift-alert-gift').textContent = `envió ${activity.count > 1 ? `${activity.count}× ` : ''}${activity.giftName}`;
   el('gift-alert-points').textContent = `+${formatPoints(activity.points)} a ${country ? country.name.toUpperCase() : ''}`;
-  el('gift-alert').style.setProperty('--color', country ? country.color : '#fbbf24');
 }
 
 function scheduleGiftAlertHide() {
@@ -524,65 +502,62 @@ function handleActivity(activity) {
   }
 }
 
-// ---------- Resultado, podio y confeti ----------
+// ---------- Pantalla final: podio de países y confeti ----------
 
-const MEDALS = ['🥇', '🥈', '🥉'];
+let resultKey = null;
 
 function renderResult(state) {
   const result = state.result;
-  if (state.gameStatus !== 'FINISHED' || !result) {
+  const isFinished = state.gameStatus === 'FINISHED' && Boolean(result);
+  stageEl.classList.toggle('is-finished', isFinished);
+  if (!isFinished) {
     resultEl.classList.add('hidden');
+    resultKey = null;
     return;
   }
 
-  const winners = result.winners;
-  const flagsEl = el('result-flags');
-  flagsEl.textContent = '';
-  flagsEl.classList.toggle('is-tie', winners.length > 1);
-  const card = el('result-card');
+  // Solo se dibuja una vez por partida (así las animaciones de entrada no se repiten)
+  const key = JSON.stringify(result.ranking.map((country) => [country.id, country.points]));
+  if (key === resultKey) return;
+  resultKey = key;
 
-  if (winners.length === 0) {
-    const trophy = document.createElement('span');
-    trophy.className = 'trophy';
-    trophy.textContent = '🏆';
-    flagsEl.append(trophy);
-    el('result-label').textContent = 'Sin ganador';
-    el('result-names').textContent = 'Nadie sumó puntos';
-    el('result-points').textContent = '';
-    card.style.removeProperty('--color');
-  } else {
-    for (const winner of winners) {
-      flagsEl.append(createFlag(winner, 'result-flag'));
-    }
-    el('result-label').textContent = result.isTie ? '¡Empate!' : '🏆 Ganador';
-    el('result-names').textContent = winners.map((country) => country.name).join(' · ');
-    el('result-points').textContent = result.isTie
-      ? `${formatPoints(winners[0].points)} puntos cada uno`
-      : `${formatPoints(winners[0].points)} puntos`;
-    if (result.isTie) {
-      card.style.removeProperty('--color');
-    } else {
-      card.style.setProperty('--color', winners[0].color);
-    }
-  }
-
-  // Podio: los espectadores que más puntos aportaron
+  const titleEl = el('result-title');
   const podium = el('podium');
   podium.textContent = '';
-  (result.topSupporters || []).forEach((supporter, index) => {
-    const li = document.createElement('li');
-    const medal = document.createElement('span');
-    medal.className = 'medal';
-    medal.textContent = MEDALS[index] || '•';
-    const who = document.createElement('span');
-    who.className = 'who';
-    who.textContent = supporter.username;
-    const pts = document.createElement('span');
-    pts.className = 'pts';
-    pts.textContent = formatPoints(supporter.points);
-    li.append(medal, createAvatar(supporter.username, supporter.avatarUrl, 'podium-avatar'), createFlag({ name: supporter.countryName, flag: supporter.flag, color: supporter.color }, 'podium-flag'), who, pts);
-    podium.append(li);
-  });
+
+  if (result.winners.length === 0) {
+    titleEl.textContent = '🏁 Sin ganador · nadie sumó puntos';
+  } else {
+    titleEl.textContent = result.isTie
+      ? `🤝 ¡Empate! ${result.winners.map((country) => country.name).join(' · ')}`
+      : `🏆 ¡Gana ${result.winners[0].name}!`;
+
+    // Los 3 primeros que sumaron puntos: 2º a la izquierda, 1º en el centro, 3º a la derecha
+    result.ranking.filter((country) => country.points > 0).slice(0, 3).forEach((country, index) => {
+      const item = document.createElement('li');
+      item.className = `podium-item place-${index + 1}`;
+
+      const rank = document.createElement('span');
+      rank.className = 'podium-rank';
+      rank.textContent = String(index + 1);
+
+      const points = document.createElement('span');
+      points.className = 'podium-points';
+      points.textContent = formatPoints(country.points);
+
+      item.append(rank, createFlag(country, 'podium-flag'), points);
+
+      if (country.mvp) {
+        const mvp = document.createElement('div');
+        mvp.className = 'podium-mvp';
+        const name = document.createElement('span');
+        name.textContent = country.mvp.username;
+        mvp.append(createAvatar(country.mvp.username, country.mvp.avatarUrl, 'mvp-avatar'), name);
+        item.append(mvp);
+      }
+      podium.append(item);
+    });
+  }
 
   resultEl.classList.remove('hidden');
 }
@@ -592,18 +567,16 @@ function launchConfetti(colors) {
   const canvas = el('confetti');
   const ctx = canvas.getContext('2d');
   const ratio = 2; // dibuja a doble resolución para que se vea nítido al escalar
-  canvas.width = panelEl.offsetWidth * ratio;
-  canvas.height = panelEl.offsetHeight * ratio;
+  canvas.width = STAGE_WIDTH * ratio;
+  canvas.height = STAGE_HEIGHT * ratio;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-  const width = panelEl.offsetWidth;
-  const height = panelEl.offsetHeight;
   const palette = [...colors, '#fbbf24', '#ffffff'];
-  const pieces = Array.from({ length: 160 }, () => ({
-    x: Math.random() * width,
-    y: -20 - Math.random() * height * 0.5,
+  const pieces = Array.from({ length: 170 }, () => ({
+    x: Math.random() * STAGE_WIDTH,
+    y: -20 - Math.random() * STAGE_HEIGHT * 0.5,
     size: 6 + Math.random() * 8,
-    speedY: 2 + Math.random() * 3,
+    speedY: 2.5 + Math.random() * 3.5,
     speedX: -1.5 + Math.random() * 3,
     angle: Math.random() * Math.PI,
     spin: -0.2 + Math.random() * 0.4,
@@ -613,7 +586,7 @@ function launchConfetti(colors) {
   const start = performance.now();
   function frame(now) {
     const elapsed = now - start;
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, STAGE_WIDTH, STAGE_HEIGHT);
     for (const piece of pieces) {
       piece.x += piece.speedX;
       piece.y += piece.speedY;
@@ -629,7 +602,7 @@ function launchConfetti(colors) {
     if (elapsed < CONFETTI_MS) {
       requestAnimationFrame(frame);
     } else {
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, STAGE_WIDTH, STAGE_HEIGHT);
     }
   }
   requestAnimationFrame(frame);
@@ -659,39 +632,29 @@ function render(state) {
 }
 
 // ---------- Ajuste al tamaño de la fuente (TikTok LIVE Studio / OBS) ----------
-// El panel se escala para caber entero en la ventana, sea del tamaño que sea.
-// Así el streamer solo tiene que arrastrar las esquinas de la fuente para agrandarlo o achicarlo.
-const FIT_MARGIN = 12; // espacio libre alrededor del panel (para que no se corte la sombra)
+// El escenario (9:16) se escala para ocupar la fuente entera. Con la fuente a 1080 x 1920
+// (la pantalla completa de TikTok) cada elemento cae justo en su sitio.
 
 function fitToScreen() {
-  // offsetWidth/Height miden el panel SIN la escala aplicada
-  const width = panelEl.offsetWidth;
-  const height = panelEl.offsetHeight;
-  if (width === 0 || height === 0) return;
-
-  const scale = Math.min(
-    (window.innerWidth - FIT_MARGIN * 2) / width,
-    (window.innerHeight - FIT_MARGIN * 2) / height,
-  );
-  panelEl.style.setProperty('--fit-margin', `${FIT_MARGIN}px`);
-  panelEl.style.setProperty('--scale', String(Math.max(scale, 0.1)));
+  const scale = Math.min(window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT);
+  stageEl.style.setProperty('--scale', String(Math.max(scale, 0.1)));
 }
 
 window.addEventListener('resize', fitToScreen);
-// El panel cambia de alto cuando cambia el número de países o aparece el resultado
-new ResizeObserver(fitToScreen).observe(panelEl);
 fitToScreen();
 
 function showInvalidKey() {
   statusEl.textContent = '⚠️ URL del overlay no válida. Copia la URL desde tu dashboard.';
   timeEl.textContent = '--:--';
   // No se sigue mostrando la partida de nadie
-  boardEl.innerHTML = '';
-  boardEl.style.height = '0';
-  rows.clear();
+  sideLeftEl.textContent = '';
+  sideRightEl.textContent = '';
+  teams.clear();
+  layoutKey = null;
   feedEl.textContent = '';
   giftStripEl.hidden = true;
   resultEl.classList.add('hidden');
+  stageEl.classList.remove('is-finished');
 }
 
 if (!overlayKey) {
