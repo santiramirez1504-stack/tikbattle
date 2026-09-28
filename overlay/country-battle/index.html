@@ -21,6 +21,8 @@
       <div class="timer" id="timer">
         <span class="timer-icon">⏱</span>
         <span class="timer-value" id="time">--:--</span>
+        <!-- Insignia mientras el 2X final está activo -->
+        <span class="timer-double" id="timer-double" hidden>⚡2X</span>
       </div>
       <div class="status-wrap">
         <p class="status" id="status">Conectando...</p>
@@ -46,6 +48,20 @@
         <span class="gift-alert-points" id="gift-alert-points"></span>
       </div>
     </section>
+
+    <!-- "2X ACTIVADO": aparece con rayos cuando empieza el 2X final (solo en algunas partidas, al azar) -->
+    <div class="double" id="double" hidden>
+      <div class="double-flash"></div>
+      <svg class="bolt bolt-1" viewBox="0 0 60 120" aria-hidden="true"><polygon points="36,2 4,66 26,66 14,118 56,44 32,44 48,2"/></svg>
+      <svg class="bolt bolt-2" viewBox="0 0 60 120" aria-hidden="true"><polygon points="36,2 4,66 26,66 14,118 56,44 32,44 48,2"/></svg>
+      <svg class="bolt bolt-3" viewBox="0 0 60 120" aria-hidden="true"><polygon points="36,2 4,66 26,66 14,118 56,44 32,44 48,2"/></svg>
+      <svg class="bolt bolt-4" viewBox="0 0 60 120" aria-hidden="true"><polygon points="36,2 4,66 26,66 14,118 56,44 32,44 48,2"/></svg>
+      <div class="double-text">
+        <span class="double-x">2X</span>
+        <span class="double-label">¡Activado!</span>
+        <span class="double-sub">Todo vale el doble</span>
+      </div>
+    </div>
 
     <!-- Cuenta atrás grande de los últimos 10 segundos -->
     <div class="countdown" id="countdown" hidden></div>

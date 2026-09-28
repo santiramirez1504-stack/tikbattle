@@ -10,18 +10,33 @@ const GAME_STATUS = {
 const DEFAULT_DURATION_SECONDS = 5 * 60;
 const TOP_SUPPORTERS = 3; // cuántos espectadores se muestran en el podio del ganador
 
+// "2X final": en algunas partidas (al azar), los últimos segundos todo vale el doble.
+// Se sortea al empezar cada partida y es sorpresa: el overlay solo lo sabe cuando se activa.
+// 35 % de las partidas. Se puede cambiar con DOUBLE_FINAL_CHANCE en el .env (0 = nunca, 1 = siempre; útil para probar)
+const DOUBLE_FINAL_CHANCE = readChance(process.env.DOUBLE_FINAL_CHANCE, 0.35);
+const DOUBLE_FINAL_SECONDS = 10;    // últimos 10 segundos (coincide con la cuenta atrás del overlay)
+const DOUBLE_MULTIPLIER = 2;
+
 // Motor del juego "Batalla de Países".
 // No sabe nada de TikTok, ni de Express, ni de WebSocket: solo maneja países, puntos,
 // qué país apoya cada espectador, cuánto aporta cada uno y el estado de la partida.
 // Extiende EventEmitter para avisar a quien escuche:
 // 'start' (inicio), 'tick' (cada segundo), 'score' (puntos sumados), 'end' (fin), 'reset' (reinicio)
 // y 'settings' (cambió la configuración).
+function readChance(value, fallback) {
+  const chance = Number(value);
+  return value !== undefined && value !== '' && chance >= 0 && chance <= 1 ? chance : fallback;
+}
+
 class GameEngine extends EventEmitter {
-  constructor(countries, { durationSeconds = DEFAULT_DURATION_SECONDS } = {}) {
+  // random: se puede cambiar en las pruebas para forzar (o impedir) el 2X final
+  constructor(countries, { durationSeconds = DEFAULT_DURATION_SECONDS, random = Math.random } = {}) {
     super();
     this.durationSeconds = durationSeconds;
+    this.random = random;
     this.status = GAME_STATUS.WAITING;
     this.timer = null;
+    this.doubleFinal = false; // ¿esta partida tiene 2X en los últimos segundos?
     this.setCountries(countries);
   }
 
@@ -76,15 +91,22 @@ class GameEngine extends EventEmitter {
 
     this.timer = this.createTimer();
     this.status = GAME_STATUS.RUNNING;
+    this.doubleFinal = this.random() < DOUBLE_FINAL_CHANCE;
     this.timer.start();
     this.emit('start');
+  }
+
+  // ¿Los puntos valen el doble AHORA? (partida con 2X final y dentro de los últimos segundos)
+  isDoubleActive() {
+    return this.isRunning() && this.doubleFinal
+      && this.timer.getRemainingSeconds() <= DOUBLE_FINAL_SECONDS;
   }
 
   // Continúa una partida guardada (ej. después de reiniciar el servidor), con sus puntos,
   // sus espectadores, lo que aportó cada uno y su reloj.
   // countries: [{ id, name, color, command, flag, points }], userCountries: [{ username, countryId }],
   // contributions: [{ username, countryId, points }]
-  resume({ countries, userCountries, contributions = [], durationSeconds, startTime, endTime }) {
+  resume({ countries, userCountries, contributions = [], durationSeconds, startTime, endTime, doubleFinal = false }) {
     if (this.status !== GAME_STATUS.WAITING) {
       throw new Error(`No se puede reanudar una partida en estado ${this.status}`);
     }
@@ -104,6 +126,7 @@ class GameEngine extends EventEmitter {
 
     this.timer = this.createTimer();
     this.status = GAME_STATUS.RUNNING;
+    this.doubleFinal = Boolean(doubleFinal);
     this.timer.resume(startTime, endTime);
     this.emit('start');
   }
@@ -162,6 +185,7 @@ class GameEngine extends EventEmitter {
       country.mvp = null;
     }
     this.clearPlayers();
+    this.doubleFinal = false;
     this.status = GAME_STATUS.WAITING;
     this.emit('reset');
   }
@@ -175,7 +199,8 @@ class GameEngine extends EventEmitter {
     this.emit('settings');
   }
 
-  // username (opcional): quién dio los puntos, para el MVP de cada país y el podio del ganador
+  // username (opcional): quién dio los puntos, para el MVP de cada país y el podio del ganador.
+  // Devuelve los puntos que se sumaron de verdad (el doble si el 2X final está activo).
   addPoints(countryId, points, username) {
     if (!this.isRunning()) {
       throw new Error(`No se pueden sumar puntos: la partida está en estado ${this.status}`);
@@ -189,11 +214,13 @@ class GameEngine extends EventEmitter {
       throw new Error(`Puntos inválidos: ${points}`);
     }
 
-    country.points += points;
+    const applied = this.isDoubleActive() ? points * DOUBLE_MULTIPLIER : points;
+    country.points += applied;
     if (typeof username === 'string' && username !== '') {
-      this.addContribution(countryId, username, points);
+      this.addContribution(countryId, username, applied);
     }
-    this.emit('score', { countryId, points, username });
+    this.emit('score', { countryId, points: applied, username });
+    return applied;
   }
 
   // Suma lo que aportó un espectador y actualiza el MVP del país si lo supera
@@ -228,6 +255,8 @@ class GameEngine extends EventEmitter {
       gameStartTime: this.timer ? this.timer.startTime : null,
       gameEndTime: this.timer ? this.timer.endTime : null,
       remainingTime: this.timer ? this.timer.getRemainingSeconds() : this.durationSeconds,
+      // Solo es true mientras el 2X está activo (antes no se revela: es sorpresa)
+      doublePoints: this.isDoubleActive(),
       countries: [...this.countries.values()].map((country) => ({
         ...country,
         mvp: country.mvp

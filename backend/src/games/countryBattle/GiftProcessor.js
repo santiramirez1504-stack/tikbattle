@@ -45,10 +45,10 @@ class GiftProcessor {
     }
 
     const quantity = Number.isInteger(count) && count > 0 ? count : 1;
-    const points = gift.points * quantity;
 
     this.gameEngine.setUserAvatar(username, avatarUrl); // foto de perfil para el MVP y el podio
-    this.gameEngine.addPoints(countryId, points, username);
+    // Los puntos sumados pueden ser el doble si el 2X final está activo
+    const points = this.gameEngine.addPoints(countryId, gift.points * quantity, username);
     // Datos del regalo para la alerta del overlay (imagen, nombre y cantidad)
     return { assigned: true, countryId, points, giftId: gift.giftId, giftName: gift.name, count: quantity };
   }

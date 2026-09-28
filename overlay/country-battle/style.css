@@ -507,6 +507,92 @@ body {
   font-weight: 900 !important;
 }
 
+/* ===== 2X final: insignia junto al tiempo ===== */
+.timer-double {
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff176, #ffb300);
+  color: #1a1a1a;
+  font-size: 17px;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px #000;
+  animation: badge-in 0.5s ease;
+}
+
+/* ===== 2X final: "2X ¡ACTIVADO!" con rayos (dura ~2,6 s y desaparece) ===== */
+.double {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+/* Mientras se ve el anuncio, la cuenta atrás grande se esconde un momento */
+.stage.is-double-intro .countdown {
+  visibility: hidden;
+}
+
+.double-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 44%, rgba(255, 244, 160, 0.85), rgba(255, 200, 0, 0.3) 38%, transparent 68%);
+  animation: double-flash 1.3s ease-out forwards;
+}
+
+.bolt {
+  position: absolute;
+  width: 74px;
+  height: 148px;
+  fill: #ffe44d;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  opacity: 0;
+  animation: bolt-strike 1.4s ease-out forwards;
+}
+
+.bolt-1 { top: 290px; left: 118px; transform: rotate(-18deg); }
+.bolt-2 { top: 290px; right: 118px; transform: rotate(18deg) scaleX(-1); animation-delay: 0.12s; }
+.bolt-3 { top: 470px; left: 150px; width: 54px; height: 108px; transform: rotate(-35deg); animation-delay: 0.3s; }
+.bolt-4 { top: 470px; right: 150px; width: 54px; height: 108px; transform: rotate(35deg) scaleX(-1); animation-delay: 0.42s; }
+
+.double-text {
+  position: absolute;
+  top: 348px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: double-pop 2.6s ease forwards;
+}
+
+.double-x {
+  font-size: 128px;
+  font-weight: 900;
+  line-height: 0.95;
+  color: #ffe44d;
+  text-shadow: -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 4px 4px 0 #000,
+    0 -4px 0 #000, 0 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, 0 0 22px rgba(255, 200, 0, 0.9);
+}
+
+.double-label {
+  font-size: 34px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: var(--outline);
+}
+
+.double-sub {
+  margin-top: 2px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  font-size: 15px;
+  font-weight: 800;
+}
+
 /* ===== Cuenta atrás de los últimos 10 segundos ===== */
 .countdown {
   position: absolute;
@@ -737,6 +823,41 @@ body {
 @keyframes gift-wiggle {
   0%, 100% { transform: rotate(-6deg) scale(1); }
   50% { transform: rotate(6deg) scale(1.08); }
+}
+
+@keyframes badge-in {
+  0% { transform: scale(0.2); opacity: 0; }
+  60% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes double-flash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  30% { opacity: 0.35; }
+  42% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* El rayo cae, parpadea como un relámpago y se apaga (no usa transform: respeta la rotación de cada rayo) */
+@keyframes bolt-strike {
+  0% { opacity: 0; translate: 0 -60px; scale: 0.5; }
+  12% { opacity: 1; translate: 0 0; scale: 1.1; }
+  22% { opacity: 0.2; }
+  32% { opacity: 1; scale: 1; }
+  45% { opacity: 0.3; }
+  58% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes double-pop {
+  0% { transform: scale(0.2) rotate(-8deg); opacity: 0; }
+  14% { transform: scale(1.25) rotate(3deg); opacity: 1; }
+  24% { transform: scale(1) rotate(0); }
+  34% { transform: scale(1.08); }
+  44% { transform: scale(1); }
+  85% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.7) translateY(-160px); opacity: 0; }
 }
 
 @keyframes pop-in {

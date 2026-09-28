@@ -314,6 +314,7 @@ class GameRoom extends EventEmitter {
         countries: this.activeCountries.map((country) => ({ ...country, points: pointsById.get(country.id) || 0 })),
         gifts: this.activeGifts,
         userCountries: this.game.getUserCountries(),
+        doubleFinal: this.game.doubleFinal,
         // Sin la foto de perfil: ocupa mucho y se recupera sola con el siguiente comentario del espectador
         contributions: this.game.getContributions().map(({ username, countryId, points }) => ({ username, countryId, points })),
       };
@@ -351,6 +352,7 @@ class GameRoom extends EventEmitter {
         countries: game.countries,
         userCountries: game.userCountries,
         contributions: game.contributions || [],
+        doubleFinal: game.doubleFinal,
         durationSeconds: game.durationSeconds,
         startTime: new Date(game.startTime).getTime(),
         endTime: new Date(game.endTime).getTime(),
