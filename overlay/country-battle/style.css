@@ -9,8 +9,10 @@
   --bronze: #e0955a;
   --danger: #ef4444;
   --pill-bg: rgba(10, 12, 28, 0.72);
-  /* Contorno para que los textos se lean sobre cualquier fondo de cámara (sin difuminados grandes: gastan CPU) */
-  --outline: 0 0 3px rgba(0, 0, 0, 0.95), 0 2px 3px rgba(0, 0, 0, 0.8);
+  /* Contorno SÓLIDO (sin difuminar) alrededor de los textos: se ven nítidos sobre cualquier fondo de cámara,
+     incluso cuando TikTok comprime el vídeo, y casi no gasta CPU */
+  --outline: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000,
+    0 -1.5px 0 #000, 0 1.5px 0 #000, -1.5px 0 0 #000, 1.5px 0 0 #000, 0 3px 4px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -105,7 +107,7 @@ body {
   padding: 5px 10px;
   border-radius: 12px;
   background: var(--pill-bg);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   line-height: 1.2;
   text-align: center;
@@ -133,7 +135,7 @@ body {
   border-left: 4px solid var(--color);
   border-radius: 12px;
   background: color-mix(in srgb, var(--color) 30%, rgb(16, 18, 34));
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   white-space: nowrap;
   animation: feed-in 0.3s ease;
@@ -196,14 +198,14 @@ body {
   padding: 2px 7px 2px 3px;
   border-radius: 999px;
   background: var(--pill-bg);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
   color: var(--gold);
 }
 
 .gift-chip img {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -326,7 +328,7 @@ body {
 /* Puntos */
 .team-points {
   position: relative;
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 900;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -344,9 +346,9 @@ body {
   justify-content: center;
   gap: 4px;
   max-width: 116px;
-  min-height: 22px;
-  font-size: 12px;
-  font-weight: 800;
+  min-height: 26px;
+  font-size: 14px;
+  font-weight: 900;
   text-shadow: var(--outline);
 }
 
@@ -356,24 +358,24 @@ body {
   white-space: nowrap;
 }
 
+/* Lo que hay que escribir. Si es largo (ej. "República Dominicana") pasa a 2 líneas en vez de cortarse */
 .team-command {
-  overflow: hidden;
   max-width: 116px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: var(--pill-bg);
-  font-size: 11px;
-  text-overflow: ellipsis;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(10, 12, 28, 0.85);
+  font-size: 12px;
+  line-height: 1.15;
+  text-align: center;
   text-transform: uppercase;
-  white-space: nowrap;
   text-shadow: none;
 }
 
 /* Foto de perfil del MVP (la del podio es más grande) */
 .mvp-avatar {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 0 0 2px var(--gold);
@@ -646,8 +648,8 @@ body {
   align-items: center;
   gap: 2px;
   max-width: 130px;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 900;
   text-shadow: var(--outline);
 }
 
