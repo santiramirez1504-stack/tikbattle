@@ -638,6 +638,29 @@ function playBeep(frequency, durationMs = 180) {
   }
 }
 
+// Chrome no deja que una página suene sola hasta que el usuario interactúa con ella.
+// Con un clic (o una tecla) en la pestaña del overlay, el sonido queda activado para siempre en esa pestaña.
+// (En OBS / TikTok LIVE Studio normalmente no hace falta: suelen permitir el sonido automático.)
+function unlockSound() {
+  try {
+    audioContext = audioContext || new AudioContext();
+    if (audioContext.state === 'suspended') audioContext.resume();
+  } catch (error) {
+    // sin Web Audio
+  }
+  // "Despierta" la voz reproduciéndola en silencio un instante
+  goVoice.muted = true;
+  goVoice.play().then(() => {
+    goVoice.pause();
+    goVoice.currentTime = 0;
+    goVoice.muted = false;
+  }).catch(() => { goVoice.muted = false; });
+  window.removeEventListener('pointerdown', unlockSound);
+  window.removeEventListener('keydown', unlockSound);
+}
+window.addEventListener('pointerdown', unlockSound);
+window.addEventListener('keydown', unlockSound);
+
 function playGoVoice() {
   goVoice.currentTime = 0;
   goVoice.play().catch(() => {}); // si el navegador bloquea el sonido automático, se sigue sin voz
