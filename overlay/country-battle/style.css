@@ -54,7 +54,7 @@ body {
   overflow: hidden;
 }
 
-/* ===== Arriba en el centro: tiempo, estado y regalos ===== */
+/* ===== Arriba en el centro: tiempo y estado ===== */
 .top {
   position: absolute;
   top: 66px;                 /* deja libre la barra de arriba de la app de TikTok */
@@ -173,48 +173,6 @@ body {
   width: 20px;
   height: 20px;
   object-fit: contain;
-}
-
-/* Regalos que suman puntos (si son muchos, rotan en grupos) */
-.gift-strip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  transition: opacity 0.25s;
-}
-
-.gift-strip.is-changing {
-  opacity: 0;
-}
-
-.gift-strip-label {
-  font-size: 15px;
-}
-
-.gift-chip {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px 7px 2px 3px;
-  border-radius: 999px;
-  background: var(--pill-bg);
-  font-size: 14px;
-  font-weight: 900;
-  color: var(--gold);
-}
-
-.gift-chip img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
-.gift-strip-page {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-soft);
-  text-shadow: var(--outline);
 }
 
 /* ===== Banderas a los lados ===== */

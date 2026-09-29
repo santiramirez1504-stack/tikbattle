@@ -13,8 +13,6 @@ const GIFT_ALERT_MS = 2800;     // cuánto dura cada alerta de regalo
 const GIFT_ALERT_QUEUE_MAX = 5; // alertas en espera como máximo (si llegan más, se descartan las más viejas)
 const FLOAT_GROUP_MS = 250;     // los "+N" de un país se agrupan en este tiempo (para no saturar la pantalla)
 const CONFETTI_MS = 5000;
-const GIFTS_PER_PAGE = 3;       // regalos que caben arriba en el centro
-const GIFT_PAGE_MS = 4000;      // si hay más, rotan en grupos cada 4 s
 const DOUBLE_INTRO_MS = 2600;   // cuánto dura el anuncio "X2 ¡Activado!" con rayos
 
 const STATUS_TEXT = {
@@ -31,7 +29,6 @@ const statusEl = el('status');
 const sideLeftEl = el('side-left');
 const sideRightEl = el('side-right');
 const feedEl = el('feed');
-const giftStripEl = el('gift-strip');
 const countdownEl = el('countdown');
 const leaderBannerEl = el('leader-banner');
 const resultEl = el('result');
@@ -339,81 +336,6 @@ function hideDoubleIntro() {
   stageEl.classList.remove('is-double-intro');
 }
 
-// ---------- Regalos que suman puntos ----------
-// Se muestran TODOS: si no caben, rotan en grupos (1/3, 2/3...) cada GIFT_PAGE_MS
-
-let lastGiftsKey = null;
-let giftPages = [];
-let giftPageIndex = 0;
-let giftPageTimer = null;
-
-function renderGiftStrip(state) {
-  const gifts = state.gifts || [];
-  const key = JSON.stringify(gifts);
-  if (key === lastGiftsKey) return; // no ha cambiado: no se redibuja (evita parpadeos)
-  lastGiftsKey = key;
-
-  // Grupos del mismo tamaño (ej. 5 regalos -> 3 + 2)
-  const pageCount = Math.ceil(gifts.length / GIFTS_PER_PAGE);
-  const perPage = Math.ceil(gifts.length / Math.max(pageCount, 1));
-  giftPages = [];
-  for (let i = 0; i < gifts.length; i += perPage) giftPages.push(gifts.slice(i, i + perPage));
-  giftPageIndex = 0;
-
-  clearInterval(giftPageTimer);
-  giftPageTimer = null;
-  giftStripEl.hidden = gifts.length === 0;
-  showGiftPage();
-  if (giftPages.length > 1) {
-    giftPageTimer = setInterval(nextGiftPage, GIFT_PAGE_MS);
-  }
-}
-
-// Fundido corto entre grupos (solo cambia la opacidad: casi no gasta CPU)
-function nextGiftPage() {
-  giftStripEl.classList.add('is-changing');
-  setTimeout(() => {
-    giftPageIndex = (giftPageIndex + 1) % giftPages.length;
-    showGiftPage();
-    giftStripEl.classList.remove('is-changing');
-  }, 250);
-}
-
-function showGiftPage() {
-  giftStripEl.textContent = '';
-  const gifts = giftPages[giftPageIndex] || [];
-  if (gifts.length === 0) return;
-
-  const label = document.createElement('span');
-  label.className = 'gift-strip-label';
-  label.textContent = '🎁';
-  giftStripEl.append(label);
-
-  for (const gift of gifts) {
-    const chip = document.createElement('span');
-    chip.className = 'gift-chip';
-    chip.title = gift.name;
-    if (gift.imageUrl && gift.imageUrl.startsWith('https://')) {
-      const img = document.createElement('img');
-      img.src = gift.imageUrl;
-      img.alt = gift.name;
-      img.referrerPolicy = 'no-referrer';
-      chip.append(img);
-    } else {
-      chip.append(document.createTextNode(`${gift.name} `));
-    }
-    chip.append(document.createTextNode(`+${formatPoints(gift.points)}`));
-    giftStripEl.append(chip);
-  }
-
-  if (giftPages.length > 1) {
-    const page = document.createElement('span');
-    page.className = 'gift-strip-page';
-    page.textContent = `${giftPageIndex + 1}/${giftPages.length}`;
-    giftStripEl.append(page);
-  }
-}
-
 // ---------- Feed de actividad ----------
 
 function addFeedItem(activity) {
@@ -656,7 +578,6 @@ function render(state) {
   renderTimer(state);
   renderDouble(state);
   renderBoard(state);
-  renderGiftStrip(state);
   renderResult(state);
 
   // Confeti solo en el momento en que termina la partida (no al abrir el overlay con una partida ya terminada)
@@ -690,7 +611,6 @@ function showInvalidKey() {
   teams.clear();
   layoutKey = null;
   feedEl.textContent = '';
-  giftStripEl.hidden = true;
   resultEl.classList.add('hidden');
   stageEl.classList.remove('is-finished');
 }
