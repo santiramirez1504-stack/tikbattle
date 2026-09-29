@@ -2,7 +2,7 @@
 // Con ella el servidor sabe de qué sala (qué streamer) mostrar la partida.
 const overlayKey = new URLSearchParams(window.location.search).get('key');
 
-const GAME_EVENTS = ['game:state', 'game:start', 'game:update', 'game:score', 'game:end', 'game:reset'];
+const GAME_EVENTS = ['game:state', 'game:countdown', 'game:start', 'game:update', 'game:score', 'game:end', 'game:reset'];
 const STAGE_WIDTH = 540;        // tamaño de diseño del escenario (9:16, como la pantalla vertical de TikTok)
 const STAGE_HEIGHT = 960;
 const URGENT_SECONDS = 10;      // desde aquí el temporizador se pone rojo y aparece la cuenta atrás grande
@@ -600,6 +600,102 @@ function launchConfetti(colors) {
   requestAnimationFrame(frame);
 }
 
+// ---------- Conteo "1, 2, 3, ¡GO!" antes de la partida ----------
+// El servidor espera INTRO_TOTAL_MS antes de empezar la partida y avisa cuánto falta (introCountdownMs).
+// Aquí se muestran los números (con un pitido) y el "¡GO!" (con voz); al terminar entra el overlay.
+
+const INTRO_TOTAL_MS = 4000;                  // debe coincidir con INTRO_COUNTDOWN_MS del servidor
+const INTRO_STEPS = ['1', '2', '3', '¡GO!'];  // uno por segundo
+const INTRO_BEEPS = [523, 659, 784];          // notas de los pitidos del 1, 2 y 3 (do, mi, sol)
+const ENTER_MS = 900;                         // duración de la entrada del overlay
+
+const introEl = el('intro');
+const introTextEl = el('intro-text');
+const goVoice = new Audio('sounds/go.wav');   // voz "Go!" (generada con la voz de Windows)
+goVoice.preload = 'auto';
+let introPlaying = false;
+let introTimers = [];
+let audioContext = null;
+
+// Pitido corto con Web Audio (sin archivos). Si el navegador no deja reproducir sonido, no pasa nada.
+function playBeep(frequency, durationMs = 180) {
+  try {
+    audioContext = audioContext || new AudioContext();
+    if (audioContext.state === 'suspended') audioContext.resume();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = 'square';
+    oscillator.frequency.value = frequency;
+    const now = audioContext.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + durationMs / 1000 + 0.05);
+  } catch (error) {
+    // sin sonido
+  }
+}
+
+function playGoVoice() {
+  goVoice.currentTime = 0;
+  goVoice.play().catch(() => {}); // si el navegador bloquea el sonido automático, se sigue sin voz
+  playBeep(1047, 350); // y un pitido agudo de "salida"
+}
+
+function showIntroStep(index) {
+  const isGo = index === INTRO_STEPS.length - 1;
+  introTextEl.textContent = INTRO_STEPS[index];
+  introTextEl.classList.toggle('is-go', isGo);
+  restartAnimation(introTextEl, 'pop');
+  if (isGo) {
+    restartAnimation(el('intro-flash'), 'flash');
+    playGoVoice();
+  } else {
+    playBeep(INTRO_BEEPS[index]);
+  }
+}
+
+function playIntro(remainingMs) {
+  introPlaying = true;
+  introTimers.forEach(clearTimeout);
+  introTimers = [];
+  stageEl.classList.remove('is-entering');
+  stageEl.classList.add('is-intro');
+  introTextEl.textContent = '';
+  introEl.hidden = false;
+
+  // Si el overlay se abrió con el conteo ya empezado, se salta lo que ya pasó
+  const elapsed = Math.max(0, INTRO_TOTAL_MS - remainingMs);
+  INTRO_STEPS.forEach((_, index) => {
+    const at = index * 1000 - elapsed;
+    if (at > -800) introTimers.push(setTimeout(() => showIntroStep(index), Math.max(0, at)));
+  });
+  introTimers.push(setTimeout(finishIntro, remainingMs));
+}
+
+// Termina el conteo y el overlay entra con su animación
+function finishIntro() {
+  if (!introPlaying) return;
+  introPlaying = false;
+  introTimers.forEach(clearTimeout);
+  introTimers = [];
+  introEl.hidden = true;
+  stageEl.classList.remove('is-intro');
+  stageEl.classList.add('is-entering');
+  introTimers.push(setTimeout(() => stageEl.classList.remove('is-entering'), ENTER_MS));
+}
+
+function renderIntro(state) {
+  const remaining = state.introCountdownMs || 0;
+  if (remaining > 0 && !introPlaying) {
+    playIntro(remaining);
+  } else if (introPlaying && (state.gameStatus === 'RUNNING' || remaining === 0)) {
+    finishIntro(); // empezó la partida (o el streamer canceló el conteo)
+  }
+}
+
 // ---------- Tamaños (los elige el streamer en el dashboard) ----------
 
 const SIZE_KEYS = ['flags', 'points', 'mvp', 'timer', 'status', 'alerts', 'countdown', 'x2', 'podium'];
@@ -656,6 +752,7 @@ function render(state) {
   // El streamer puede ocultar la barra de mensaje desde el dashboard (las banderas suben solas)
   stageEl.classList.toggle('hide-status', Boolean(state.overlayOptions && state.overlayOptions.showStatus === false));
   statusEl.textContent = STATUS_TEXT[state.gameStatus] || '';
+  renderIntro(state);
   renderTimer(state);
   renderDouble(state);
   renderBoard(state);

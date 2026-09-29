@@ -94,7 +94,7 @@ async function main() {
   // 1) Servidor solo para la prueba
   const server = spawn(process.execPath, ['server.js'], {
     cwd: path.join(__dirname, '..'),
-    env: { ...process.env, PORT: String(PORT), MONGODB_URI: databaseUri, JWT_SECRET: jwtSecret, SIMULATION_MODE: 'true', NODE_ENV: 'development', TRUST_PROXY: '' },
+    env: { ...process.env, PORT: String(PORT), MONGODB_URI: databaseUri, JWT_SECRET: jwtSecret, SIMULATION_MODE: 'true', NODE_ENV: 'development', TRUST_PROXY: '', INTRO_COUNTDOWN_MS: '0' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let serverLog = '';

@@ -10,6 +10,7 @@ const SOCKET_EVENTS = {
   end: 'game:end',
   reset: 'game:reset',
   settings: 'game:update',
+  countdown: 'game:countdown', // conteo "1, 2, 3, ¡GO!" antes de empezar
 };
 
 // Cada sala tiene su propio "canal": solo los navegadores de ese streamer reciben sus eventos

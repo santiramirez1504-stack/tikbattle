@@ -74,9 +74,12 @@ function formatResult(result) {
 
 function renderGame(state) {
   currentGameStatus = state.gameStatus;
-  setBadge(el('game-status'), GAME_STATUS_LABEL[state.gameStatus]);
+  // Durante el conteo "1, 2, 3, ¡GO!" del overlay la partida aún no ha empezado
+  const isIntro = state.introCountdownMs > 0;
+  setBadge(el('game-status'), isIntro ? { text: '¡Empezando! 1, 2, 3…', className: 'live' } : GAME_STATUS_LABEL[state.gameStatus]);
   el('game-time').textContent = formatTime(state.remainingTime);
   el('stop-game').disabled = state.gameStatus !== 'RUNNING';
+  el('new-game').disabled = isIntro;
 
   const resultText = formatResult(state.result);
   el('game-result').textContent = resultText;
@@ -850,7 +853,7 @@ async function init() {
   // El token dice al servidor de qué sala (de qué streamer) enviarnos los eventos.
   const socket = io({ auth: { token: getToken() } });
   socket.on('auth:error', logout);
-  for (const eventName of ['game:state', 'game:start', 'game:update', 'game:score', 'game:end', 'game:reset']) {
+  for (const eventName of ['game:state', 'game:countdown', 'game:start', 'game:update', 'game:score', 'game:end', 'game:reset']) {
     socket.on(eventName, renderGame);
   }
   socket.on('game:saved', loadHistory);

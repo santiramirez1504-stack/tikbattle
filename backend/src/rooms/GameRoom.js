@@ -12,6 +12,12 @@ const { getCachedGiftImage } = require('../tiktok/giftCatalog');
 
 const { GAME_STATUS } = GameEngine;
 const ENGINE_EVENTS = ['start', 'tick', 'score', 'end', 'reset', 'settings'];
+
+// Conteo "1, 2, 3, ¡GO!" antes de cada partida nueva: la partida empieza de verdad al terminar
+// (así el conteo no quita tiempo de juego). INTRO_COUNTDOWN_MS=0 en el .env lo desactiva.
+const INTRO_COUNTDOWN_MS = process.env.INTRO_COUNTDOWN_MS !== undefined && process.env.INTRO_COUNTDOWN_MS !== ''
+  ? Math.max(0, Number(process.env.INTRO_COUNTDOWN_MS) || 0)
+  : 4000;
 // Los puntos se guardan como mucho cada N segundos (SNAPSHOT_INTERVAL_SECONDS, por defecto 10).
 // Menos guardados = mucho menos tráfico con MongoDB (importante en el plan gratis de Atlas).
 // Si el servidor se cae, como mucho se pierden esos últimos segundos de puntos.
@@ -44,6 +50,8 @@ class GameRoom extends EventEmitter {
     this.giftProcessor = new GiftProcessor(this.game, config.gifts);
     this.autoRestartSeconds = config.autoRestartSeconds;
     this.autoRestartTimer = null;
+    this.introTimer = null;     // conteo "1, 2, 3, ¡GO!" en marcha
+    this.introEndsAt = null;
     this.isManualStop = false;
     this.persistTimer = null;
     this.persistChain = Promise.resolve();
@@ -103,6 +111,8 @@ class GameRoom extends EventEmitter {
       ...state,
       result: state.gameStatus === GAME_STATUS.FINISHED ? this.game.getResult() : null,
       // Regalos que suman puntos, con su imagen: el overlay los muestra para que el público sepa cuánto vale cada uno
+      // Milisegundos que faltan del conteo "1, 2, 3, ¡GO!" (0 = no hay conteo)
+      introCountdownMs: this.introEndsAt ? Math.max(0, this.introEndsAt - Date.now()) : 0,
       gifts: this.activeGifts
         .map(({ giftId, name, points }) => ({ giftId, name, points, imageUrl: getCachedGiftImage(giftId) }))
         .sort((a, b) => b.points - a.points),
@@ -173,26 +183,48 @@ class GameRoom extends EventEmitter {
 
   startGame() {
     this.cancelAutoRestart();
+    this.cancelIntro();
     this.game.start();
   }
 
   resetGame() {
     this.cancelAutoRestart();
+    this.cancelIntro();
     this.game.reset();
   }
 
-  // "Nueva partida": carga la configuración guardada del streamer, reinicia e inicia
+  // "Nueva partida": carga la configuración guardada del streamer, reinicia y, tras el conteo
+  // "1, 2, 3, ¡GO!" del overlay, la inicia
   async newGame() {
     this.cancelAutoRestart();
+    this.cancelIntro();
     const config = await gameConfigService.getConfig(this.userId);
     this.game.reset();
     this.applyConfig(config);
-    this.game.start();
+
+    if (INTRO_COUNTDOWN_MS === 0) {
+      this.game.start();
+      return;
+    }
+    this.introEndsAt = Date.now() + INTRO_COUNTDOWN_MS;
+    this.introTimer = setTimeout(() => {
+      this.introTimer = null;
+      this.introEndsAt = null;
+      if (!this.game.isRunning()) this.game.start();
+    }, INTRO_COUNTDOWN_MS);
+    this.emit('game', 'countdown'); // el overlay empieza el conteo
+  }
+
+  cancelIntro() {
+    clearTimeout(this.introTimer);
+    this.introTimer = null;
+    this.introEndsAt = null;
   }
 
   // "Detener": termina la partida antes de tiempo y muestra el resultado
   stopGame() {
     this.cancelAutoRestart();
+    this.cancelIntro();
     this.isManualStop = true;
     this.game.finish();
     this.isManualStop = false;
@@ -278,6 +310,7 @@ class GameRoom extends EventEmitter {
     return !this.game.isRunning()
       && tiktokStatus === 'DISCONNECTED'
       && this.autoRestartTimer === null
+      && this.introTimer === null
       && this.clients === 0
       && Date.now() - this.lastActivityAt >= idleMs;
   }
@@ -300,6 +333,7 @@ class GameRoom extends EventEmitter {
   // Detiene la partida y desconecta TikTok (ej. cuando un administrador bloquea la cuenta)
   async shutdown() {
     this.cancelAutoRestart();
+    this.cancelIntro();
     if (this.game.isRunning()) {
       this.stopGame();
     }
@@ -309,6 +343,7 @@ class GameRoom extends EventEmitter {
   // Apaga todo lo que la sala tenga pendiente para que pueda borrarse de la memoria
   dispose() {
     this.cancelAutoRestart();
+    this.cancelIntro();
     clearTimeout(this.persistTimer);
     this.persistTimer = null;
     // Primero se quitan los "oyentes" para que el reset no avise ni guarde nada
