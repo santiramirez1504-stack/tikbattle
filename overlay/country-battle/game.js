@@ -107,8 +107,9 @@ function restartAnimation(element, className) {
 }
 
 // ---------- Banderas a los lados ----------
-// Cada país se queda SIEMPRE en su sitio (así cada espectador encuentra rápido el suyo).
-// El ranking se ve con las insignias 1-2-3, la corona del líder y los puntos en dorado.
+// Las banderas se ordenan por puntos: el 1º arriba a la izquierda, bajando por la columna izquierda
+// y siguiendo por la derecha, hasta el último abajo a la derecha. Cuando un país adelanta a otro,
+// las banderas se deslizan a su nuevo puesto. Además: insignias 1-2-3, corona del líder y puntos en dorado.
 
 function createTeam(country) {
   const teamEl = document.createElement('li');
@@ -135,6 +136,10 @@ function createTeam(country) {
   subEl.className = 'team-sub';
 
   teamEl.append(flagWrap, pointsEl, subEl);
+  // Al terminar de deslizarse a su nuevo puesto, vuelve a su capa normal
+  teamEl.addEventListener('transitionend', (event) => {
+    if (event.target === teamEl && event.propertyName === 'transform') teamEl.classList.remove('is-moving');
+  });
 
   const team = {
     el: teamEl, rankEl, flagSlot, flagKey: null, pointsEl, pointsText, subEl, subKey: null,
@@ -180,21 +185,46 @@ function renderTeamSub(team, country, status) {
   }
 }
 
-// Reparte los países: la primera mitad a la izquierda y el resto a la derecha
-function placeTeams(countries) {
-  const key = countries.map((country) => country.id).join(',');
-  if (key === layoutKey) return;
+// Coloca los países por puesto: la primera mitad (los mejores) a la izquierda y el resto a la derecha.
+// ranked: países ya ordenados de más a menos puntos (en empate, en el orden de la configuración).
+function placeTeams(ranked) {
+  const key = ranked.map((country) => country.id).join(',');
+  if (key === layoutKey) return; // nadie cambió de puesto
+  const isFirstLayout = layoutKey === null;
   layoutKey = key;
 
-  const half = Math.ceil(countries.length / 2);
-  countries.forEach((country, index) => {
+  // Animación "FLIP": se mide dónde está cada bandera, se mueve a su nuevo sitio y se anima
+  // desde la posición vieja hasta la nueva (solo se mueve con transform: muy poco trabajo).
+  const before = new Map();
+  if (!isFirstLayout) {
+    for (const [id, team] of teams) before.set(id, team.el.getBoundingClientRect());
+  }
+
+  const half = Math.ceil(ranked.length / 2);
+  ranked.forEach((country, index) => {
     const team = teams.get(country.id);
     (index < half ? sideLeftEl : sideRightEl).append(team.el);
   });
   // Con pocos países por lado, se reparten en el alto disponible
-  const perSide = half;
-  sideLeftEl.classList.toggle('is-spread', perSide <= 3);
-  sideRightEl.classList.toggle('is-spread', perSide <= 3);
+  sideLeftEl.classList.toggle('is-spread', half <= 3);
+  sideRightEl.classList.toggle('is-spread', half <= 3);
+
+  if (isFirstLayout) return;
+  // Las medidas de la pantalla vienen escaladas (--scale): se pasan a medidas del escenario
+  const scale = stageEl.getBoundingClientRect().width / STAGE_WIDTH || 1;
+  for (const [id, oldRect] of before) {
+    const team = teams.get(id);
+    if (!team) continue;
+    const newRect = team.el.getBoundingClientRect();
+    const dx = (oldRect.left - newRect.left) / scale;
+    const dy = (oldRect.top - newRect.top) / scale;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+    team.el.classList.remove('is-moving');
+    team.el.style.transform = `translate(${dx}px, ${dy}px)`;
+    void team.el.offsetWidth; // aplica la posición vieja antes de animar
+    team.el.classList.add('is-moving');
+    team.el.style.transform = '';
+  }
 }
 
 function renderBoard(state) {
@@ -212,7 +242,8 @@ function renderBoard(state) {
   for (const country of countries) {
     if (!teams.has(country.id)) createTeam(country);
   }
-  placeTeams(countries);
+  // sort es estable: en empate se mantiene el orden de la configuración (las banderas no "bailan")
+  placeTeams(sorted);
 
   // Puesto de cada país (solo cuenta si tiene puntos)
   const rankById = new Map();

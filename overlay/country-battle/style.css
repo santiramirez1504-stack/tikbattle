@@ -226,6 +226,12 @@ body {
   gap: 1px;
 }
 
+/* Cambio de puesto: la bandera se desliza desde su sitio viejo al nuevo (por encima de las demás) */
+.team.is-moving {
+  z-index: 2;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .team-flag-wrap {
   zoom: var(--s-flags);
   position: relative;
