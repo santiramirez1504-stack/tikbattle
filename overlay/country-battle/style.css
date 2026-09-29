@@ -64,6 +64,7 @@ body {
   --s-x2: 1;
   --s-podium: 1;
   --content-top: 166px;      /* dónde termina el bloque de arriba (lo mide game.js) */
+  --fit: 1;                  /* con muchos países (hasta 7 por lado) game.js lo baja para que quepan todos */
   /* Ancho de cada columna de banderas: crece si las banderas, el MVP o los puntos se agrandan */
   --col-w: calc(100px * max(var(--s-flags), var(--s-mvp), var(--s-points) * 0.8));
 }
@@ -219,6 +220,8 @@ body {
 }
 
 .team {
+  /* Ajuste automático para que quepan todos los países (se vuelve a dibujar nítido, no se estira) */
+  zoom: var(--fit);
   position: relative;
   display: flex;
   flex-direction: column;

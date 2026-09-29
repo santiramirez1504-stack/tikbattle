@@ -210,7 +210,7 @@ Si se pasa del límite, el servidor no se cae: los puntos llegan al overlay con 
   - Se eligen del catálogo de TikTok con el botón **+** y se les asignan puntos.
   - Los ids reales que habíamos anotado (Rose `5655`, Heart Me `7934`, Popular Vote `13651`, Treasure Clover `637990`) ya no hace falta apuntarlos, porque el catálogo los muestra todos.
   - "Popular Vote" ahora se llama **"Go Popular"**: TikTok cambia nombres, por eso usamos el id.
-- **Editar países desde el dashboard**: nombre, comando y color, de 2 a 8 países (Módulo 12).
+- **Editar países desde el dashboard**: nombre, comando y color, de 2 a 14 países (Módulo 12).
 - **Guardar configuración e historial en MongoDB** (Módulo 12).
 - **Botones "Nueva partida" y "Detener"** en el dashboard (Módulo 11).
 - **Reinicio automático** después de mostrar el ganador (Módulo 11).

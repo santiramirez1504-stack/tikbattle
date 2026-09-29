@@ -201,6 +201,7 @@ function placeTeams(ranked) {
   }
 
   const half = Math.ceil(ranked.length / 2);
+  if (sideLeftEl.children.length + sideRightEl.children.length !== ranked.length) needsFit = true;
   ranked.forEach((country, index) => {
     const team = teams.get(country.id);
     (index < half ? sideLeftEl : sideRightEl).append(team.el);
@@ -210,8 +211,9 @@ function placeTeams(ranked) {
   sideRightEl.classList.toggle('is-spread', half <= 3);
 
   if (isFirstLayout) return;
-  // Las medidas de la pantalla vienen escaladas (--scale): se pasan a medidas del escenario
-  const scale = stageEl.getBoundingClientRect().width / STAGE_WIDTH || 1;
+  // Las medidas de la pantalla vienen escaladas (--scale y el ajuste --fit): se pasan a medidas de la bandera
+  const fit = parseFloat(stageEl.style.getPropertyValue('--fit')) || 1;
+  const scale = (stageEl.getBoundingClientRect().width / STAGE_WIDTH || 1) * fit;
   for (const [id, oldRect] of before) {
     const team = teams.get(id);
     if (!team) continue;
@@ -611,6 +613,7 @@ function applySizes(sizes) {
     const percent = sizes && Number.isFinite(sizes[name]) ? sizes[name] : 100;
     stageEl.style.setProperty(`--s-${name}`, String(percent / 100));
   }
+  needsFit = true; // al cambiar tamaños, hay que volver a comprobar si caben los países
 }
 
 // Las banderas y las alertas empiezan justo debajo del bloque de arriba (tiempo + mensaje),
@@ -618,8 +621,29 @@ function applySizes(sizes) {
 const topEl = el('top');
 function placeContentBelowTop() {
   stageEl.style.setProperty('--content-top', `${Math.round(topEl.offsetTop + topEl.offsetHeight + 8)}px`);
+  fitColumns();
 }
 new ResizeObserver(placeContentBelowTop).observe(topEl);
+
+// Con muchos países (hasta 7 por lado) no caben a su tamaño normal: se mide cuánto ocupan
+// y se reducen (--fit) solo lo necesario para que quepan todos. Usa zoom: se ven nítidos.
+const MIN_FIT = 0.5;
+let needsFit = true;
+
+function fitColumns() {
+  needsFit = false;
+  stageEl.style.setProperty('--fit', '1');
+  let fit = 1;
+  for (const side of [sideLeftEl, sideRightEl]) {
+    const count = side.children.length;
+    if (count === 0) continue;
+    const gaps = (count - 1) * (parseFloat(getComputedStyle(side).rowGap) || 0);
+    const content = side.scrollHeight - gaps;
+    const available = side.clientHeight - gaps;
+    if (content > available) fit = Math.min(fit, available / content);
+  }
+  stageEl.style.setProperty('--fit', String(Math.max(MIN_FIT, Math.floor(fit * 100) / 100)));
+}
 
 // ---------- Dibujo general ----------
 
@@ -633,6 +657,8 @@ function render(state) {
   renderTimer(state);
   renderDouble(state);
   renderBoard(state);
+  // Cambió el número de países, el tamaño de algo o el estado (en la espera hay textos de 2 líneas)
+  if (needsFit || state.gameStatus !== previousStatus) fitColumns();
   renderResult(state);
 
   // Confeti solo en el momento en que termina la partida (no al abrir el overlay con una partida ya terminada)

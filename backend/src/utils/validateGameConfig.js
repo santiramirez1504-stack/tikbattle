@@ -6,7 +6,7 @@ const LIMITS = {
   maxDuration: 60 * 60,
   maxAutoRestart: 5 * 60,
   minCountries: 2,
-  maxCountries: 8,
+  maxCountries: 14,
   maxTextLength: 30,
   maxGifts: 30,
   maxGiftNameLength: 40,

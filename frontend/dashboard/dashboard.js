@@ -334,9 +334,9 @@ el('reset-sizes').addEventListener('click', () => {
 // ---------- Configuración (editor) ----------
 
 const MIN_COUNTRIES = 2;
-const MAX_COUNTRIES = 8;
+const MAX_COUNTRIES = 14;
 const MAX_GIFTS = 30;
-const NEW_COUNTRY_COLORS = ['#2f7df6', '#16a34a', '#e11d48', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
+const NEW_COUNTRY_COLORS = ['#2f7df6', '#16a34a', '#e11d48', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#14b8a6', '#a855f7', '#eab308', '#0ea5e9', '#f43f5e'];
 
 // Copia de trabajo: se edita aquí y solo se envía al servidor al pulsar "Guardar configuración"
 let editorCountries = [];
