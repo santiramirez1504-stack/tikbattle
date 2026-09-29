@@ -178,13 +178,13 @@ body {
 /* ===== Banderas a los lados ===== */
 .side {
   position: absolute;
-  top: 60px;
-  bottom: 170px;             /* deja libre la zona de comentarios de la app de TikTok */
+  top: 166px;                /* empiezan debajo del tiempo y de la cápsula del mensaje */
+  bottom: 130px;             /* deja libre casi toda la zona de comentarios de la app de TikTok */
   width: 116px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 10px;
   list-style: none;
   transition: opacity 0.4s;
 }
@@ -385,19 +385,23 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 14px;
-  border-radius: 999px;
+  width: max-content;
+  max-width: 280px;          /* cabe entre las 2 columnas de banderas (si el nombre es largo, 2 líneas) */
+  padding: 6px 12px;
+  border-radius: 18px;
   background: linear-gradient(90deg, var(--accent), #ff7a45);
-  box-shadow: 0 4px 14px rgba(254, 44, 85, 0.5);
-  font-size: 15px;
+  box-shadow: 0 0 0 2px #000, 0 4px 14px rgba(254, 44, 85, 0.5);
+  font-size: 14px;
   font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
   text-transform: uppercase;
-  white-space: nowrap;
   transform: translateX(-50%);
   animation: banner-in 2.6s ease forwards;
 }
 
 .banner-flag {
+  flex-shrink: 0;
   width: 28px;
   height: 20px;
   border-radius: 4px;
