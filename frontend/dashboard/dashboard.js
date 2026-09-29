@@ -339,22 +339,48 @@ function renderOverlayOptions(options) {
   for (const { key, inputId } of OVERLAY_OPTIONS) {
     el(inputId).checked = !options || options[key] !== false;
   }
+  const opacity = options && Number.isInteger(options.flagOpacity) ? options.flagOpacity : 100;
+  el('flag-opacity').value = String(opacity);
+  el('flag-opacity-value').textContent = `${opacity} %`;
+}
+
+// Todas las opciones juntas (el servidor las guarda a la vez)
+function collectOverlayOptions() {
+  return {
+    ...Object.fromEntries(OVERLAY_OPTIONS.map(({ key, inputId }) => [key, el(inputId).checked])),
+    flagOpacity: Number(el('flag-opacity').value),
+  };
+}
+
+// Guarda las opciones; devuelve true si se guardaron
+async function saveOverlayOptions(message) {
+  setBadge(el('sizes-status'), { text: 'Guardando...', className: 'warn' });
+  try {
+    renderOverlayOptions(await call('PUT', '/api/game/overlay-options', collectOverlayOptions()));
+    setBadge(el('sizes-status'), { text: 'Guardado ✓', className: 'ok' });
+    if (message) showToast(message);
+    return true;
+  } catch (error) {
+    setBadge(el('sizes-status'), { text: 'Sin guardar', className: 'warn' });
+    return false;
+  }
 }
 
 for (const { inputId, on, off } of OVERLAY_OPTIONS) {
   el(inputId).addEventListener('change', async (event) => {
-    const body = Object.fromEntries(OVERLAY_OPTIONS.map(({ key, inputId: id }) => [key, el(id).checked]));
-    setBadge(el('sizes-status'), { text: 'Guardando...', className: 'warn' });
-    try {
-      renderOverlayOptions(await call('PUT', '/api/game/overlay-options', body));
-      setBadge(el('sizes-status'), { text: 'Guardado ✓', className: 'ok' });
-      showToast(event.target.checked ? on : off);
-    } catch (error) {
-      event.target.checked = !event.target.checked; // no se guardó: vuelve como estaba
-      setBadge(el('sizes-status'), { text: 'Sin guardar', className: 'warn' });
-    }
+    const saved = await saveOverlayOptions(event.target.checked ? on : off);
+    if (!saved) event.target.checked = !event.target.checked; // no se guardó: vuelve como estaba
   });
 }
+
+// Opacidad de las banderas: se guarda sola al dejar de mover la barra
+let opacitySaveTimer = null;
+el('flag-opacity').addEventListener('input', () => {
+  el('flag-opacity-value').textContent = `${el('flag-opacity').value} %`;
+  setBadge(el('sizes-status'), { text: 'Guardando...', className: 'warn' });
+  clearTimeout(opacitySaveTimer);
+  opacitySaveTimer = setTimeout(() => saveOverlayOptions(), SIZE_SAVE_DELAY_MS);
+});
 
 el('reset-sizes').addEventListener('click', () => {
   renderSizes(Object.fromEntries(SIZE_PARTS.map(({ key }) => [key, 100])));

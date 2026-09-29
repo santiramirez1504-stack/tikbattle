@@ -811,6 +811,9 @@ function render(state) {
   applySizes(state.overlaySizes);
   // El streamer puede ocultar la barra de mensaje desde el dashboard (las banderas suben solas)
   stageEl.classList.toggle('hide-status', Boolean(state.overlayOptions && state.overlayOptions.showStatus === false));
+  // Opacidad de las banderas (el streamer la elige en el dashboard, en %)
+  const flagOpacity = state.overlayOptions && Number.isFinite(state.overlayOptions.flagOpacity) ? state.overlayOptions.flagOpacity : 100;
+  stageEl.style.setProperty('--flag-opacity', String(flagOpacity / 100));
   // Alertas de regalo desactivadas: se quita la que esté a la vista y las que esperaban turno
   if (state.overlayOptions && state.overlayOptions.showGiftAlerts === false && (currentAlert || giftAlertQueue.length)) {
     giftAlertQueue.length = 0;

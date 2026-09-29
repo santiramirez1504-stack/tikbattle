@@ -65,6 +65,7 @@ body {
   --s-podium: 1;
   --content-top: 166px;      /* dónde termina el bloque de arriba (lo mide game.js) */
   --fit: 1;                  /* con muchos países (hasta 7 por lado) game.js lo baja para que quepan todos */
+  --flag-opacity: 1;         /* opacidad de las banderas (la elige el streamer en el dashboard) */
   /* Ancho de cada columna de banderas: crece si las banderas, el MVP o los puntos se agrandan */
   --col-w: calc(100px * max(var(--s-flags), var(--s-mvp), var(--s-points) * 0.8));
 }
@@ -255,7 +256,8 @@ body {
   object-fit: cover;
   /* Contorno negro sólido: la bandera se recorta bien sobre cualquier fondo */
   box-shadow: 0 0 0 2.5px #000, 0 3px 7px rgba(0, 0, 0, 0.55);
-  transition: box-shadow 0.3s, transform 0.3s;
+  opacity: var(--flag-opacity); /* solo la bandera: puntos, MVP, corona e insignias no cambian */
+  transition: box-shadow 0.3s, transform 0.3s, opacity 0.3s;
 }
 
 /* Sin bandera: rectángulo del color del país con su inicial */

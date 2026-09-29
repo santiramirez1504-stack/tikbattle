@@ -40,6 +40,7 @@ const gameConfigSchema = new mongoose.Schema(
     overlayOptions: {
       showStatus: { type: Boolean, default: true },
       showGiftAlerts: { type: Boolean, default: true },
+      flagOpacity: { type: Number, default: 100 }, // opacidad de las banderas, en % (20 a 100)
     },
   },
   { timestamps: true }

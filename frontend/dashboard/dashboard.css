@@ -558,3 +558,12 @@
   accent-color: var(--accent);
   cursor: pointer;
 }
+
+/* Barra de opacidad de las banderas (debajo de los interruptores) */
+.opacity-row {
+  margin: 4px 0 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}

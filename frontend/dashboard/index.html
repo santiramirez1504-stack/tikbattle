@@ -101,6 +101,12 @@
         <input type="checkbox" id="show-gift-alerts" checked>
         <span><strong>Mostrar las alertas de regalo</strong> (el recuadro "juan envió Rosa +5 a CUBA"). Los regalos suman puntos igual.</span>
       </label>
+      <!-- Opacidad solo de las banderas (puntos, MVP, corona e insignias no cambian) -->
+      <div class="size-row opacity-row">
+        <label for="flag-opacity">🌫️ Opacidad de las banderas</label>
+        <span class="size-value" id="flag-opacity-value">100 %</span>
+        <input type="range" id="flag-opacity" min="20" max="100" step="5" value="100">
+      </div>
       <p class="hint">Mueve cada barra y el cambio se ve <strong>al instante</strong> en tu overlay (se guarda solo). Cada parte se vuelve a dibujar a su nuevo tamaño, así que se mantiene nítida.</p>
       <div class="size-list" id="size-list"></div>
       <button class="btn btn-ghost btn-block" id="reset-sizes" type="button">Restablecer todo al 100 %</button>
