@@ -600,6 +600,38 @@ function launchConfetti(colors) {
   requestAnimationFrame(frame);
 }
 
+// ---------- Descanso cada minuto ----------
+// Cada minuto de juego el overlay se aparta 7 s (1 s saliendo + 5 s fuera + 1 s volviendo) para dejar
+// ver la cámara. No pasa en los últimos segundos (cuenta atrás final) ni fuera de la partida.
+
+const REST_EVERY_SECONDS = 60;
+const REST_OUT_MS = 6000;         // 1 s de salida + 5 s fuera; luego vuelve en 1 s (total 7 s)
+const REST_MIN_REMAINING = 12;    // no se aparta si quedan 12 s o menos
+let lastRestAt = null;
+let restTimer = null;
+
+function renderRest(state) {
+  if (state.gameStatus !== 'RUNNING') {
+    stopRest();
+    lastRestAt = null;
+    return;
+  }
+  const elapsed = state.durationSeconds - state.remainingTime;
+  const isTime = elapsed > 0 && elapsed % REST_EVERY_SECONDS === 0;
+  if (isTime && elapsed !== lastRestAt && state.remainingTime > REST_MIN_REMAINING && !introPlaying) {
+    lastRestAt = elapsed;
+    stageEl.classList.add('is-resting');
+    clearTimeout(restTimer);
+    restTimer = setTimeout(stopRest, REST_OUT_MS);
+  }
+}
+
+function stopRest() {
+  clearTimeout(restTimer);
+  restTimer = null;
+  stageEl.classList.remove('is-resting');
+}
+
 // ---------- Conteo "1, 2, 3, ¡GO!" antes de la partida ----------
 // El servidor espera INTRO_TOTAL_MS antes de empezar la partida y avisa cuánto falta (introCountdownMs).
 // Aquí se muestran los números (con un pitido) y el "¡GO!" (con voz); al terminar entra el overlay.
@@ -776,6 +808,7 @@ function render(state) {
   stageEl.classList.toggle('hide-status', Boolean(state.overlayOptions && state.overlayOptions.showStatus === false));
   statusEl.textContent = STATUS_TEXT[state.gameStatus] || '';
   renderIntro(state);
+  renderRest(state);
   renderTimer(state);
   renderDouble(state);
   renderBoard(state);
