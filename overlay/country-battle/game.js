@@ -487,9 +487,14 @@ function showNextGiftAlert() {
   scheduleGiftAlertHide();
 }
 
+// ¿Mostrar el recuadro de cada regalo? El streamer lo decide en el dashboard (los puntos cuentan igual)
+function giftAlertsEnabled() {
+  return !(lastState && lastState.overlayOptions && lastState.overlayOptions.showGiftAlerts === false);
+}
+
 function handleActivity(activity) {
   addFeedItem(activity);
-  if (activity.type === 'GIFT') {
+  if (activity.type === 'GIFT' && giftAlertsEnabled()) {
     queueGiftAlert(activity);
   }
 }
@@ -806,6 +811,13 @@ function render(state) {
   applySizes(state.overlaySizes);
   // El streamer puede ocultar la barra de mensaje desde el dashboard (las banderas suben solas)
   stageEl.classList.toggle('hide-status', Boolean(state.overlayOptions && state.overlayOptions.showStatus === false));
+  // Alertas de regalo desactivadas: se quita la que esté a la vista y las que esperaban turno
+  if (state.overlayOptions && state.overlayOptions.showGiftAlerts === false && (currentAlert || giftAlertQueue.length)) {
+    giftAlertQueue.length = 0;
+    if (currentAlert) clearTimeout(currentAlert.hideTimer);
+    currentAlert = null;
+    el('gift-alert').hidden = true;
+  }
   statusEl.textContent = STATUS_TEXT[state.gameStatus] || '';
   renderIntro(state);
   renderRest(state);

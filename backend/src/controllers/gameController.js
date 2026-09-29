@@ -96,7 +96,7 @@ const saveOverlaySizes = withRoom(async (room, req, res) => {
   res.json(saved.overlaySizes);
 });
 
-// PUT /api/game/overlay-options   body: { showStatus: true | false }
+// PUT /api/game/overlay-options   body: { showStatus: true | false, showGiftAlerts: true | false }
 // Guarda qué partes se muestran y lo aplica al instante en el overlay
 const saveOverlayOptions = withRoom(async (room, req, res) => {
   const { options, error } = validateOverlayOptions(req.body);

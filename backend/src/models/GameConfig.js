@@ -39,6 +39,7 @@ const gameConfigSchema = new mongoose.Schema(
     // Qué se muestra en el overlay. Ej: { showStatus: false } oculta la barra de mensaje
     overlayOptions: {
       showStatus: { type: Boolean, default: true },
+      showGiftAlerts: { type: Boolean, default: true },
     },
   },
   { timestamps: true }

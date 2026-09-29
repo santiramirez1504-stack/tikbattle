@@ -329,23 +329,32 @@ async function saveSizes() {
   }
 }
 
-// Mostrar u ocultar la barra de mensaje del overlay (se guarda y se aplica al instante)
+// Qué partes se muestran en el overlay: cada interruptor se guarda y se aplica al instante
+const OVERLAY_OPTIONS = [
+  { key: 'showStatus', inputId: 'show-status', on: 'Barra de mensaje visible en el overlay', off: 'Barra de mensaje oculta en el overlay' },
+  { key: 'showGiftAlerts', inputId: 'show-gift-alerts', on: 'Alertas de regalo visibles en el overlay', off: 'Alertas de regalo ocultas en el overlay' },
+];
+
 function renderOverlayOptions(options) {
-  el('show-status').checked = !options || options.showStatus !== false;
+  for (const { key, inputId } of OVERLAY_OPTIONS) {
+    el(inputId).checked = !options || options[key] !== false;
+  }
 }
 
-el('show-status').addEventListener('change', async (event) => {
-  const showStatus = event.target.checked;
-  setBadge(el('sizes-status'), { text: 'Guardando...', className: 'warn' });
-  try {
-    renderOverlayOptions(await call('PUT', '/api/game/overlay-options', { showStatus }));
-    setBadge(el('sizes-status'), { text: 'Guardado ✓', className: 'ok' });
-    showToast(showStatus ? 'Barra de mensaje visible en el overlay' : 'Barra de mensaje oculta en el overlay');
-  } catch (error) {
-    event.target.checked = !showStatus; // no se guardó: vuelve como estaba
-    setBadge(el('sizes-status'), { text: 'Sin guardar', className: 'warn' });
-  }
-});
+for (const { inputId, on, off } of OVERLAY_OPTIONS) {
+  el(inputId).addEventListener('change', async (event) => {
+    const body = Object.fromEntries(OVERLAY_OPTIONS.map(({ key, inputId: id }) => [key, el(id).checked]));
+    setBadge(el('sizes-status'), { text: 'Guardando...', className: 'warn' });
+    try {
+      renderOverlayOptions(await call('PUT', '/api/game/overlay-options', body));
+      setBadge(el('sizes-status'), { text: 'Guardado ✓', className: 'ok' });
+      showToast(event.target.checked ? on : off);
+    } catch (error) {
+      event.target.checked = !event.target.checked; // no se guardó: vuelve como estaba
+      setBadge(el('sizes-status'), { text: 'Sin guardar', className: 'warn' });
+    }
+  });
+}
 
 el('reset-sizes').addEventListener('click', () => {
   renderSizes(Object.fromEntries(SIZE_PARTS.map(({ key }) => [key, 100])));

@@ -1,10 +1,11 @@
 // Opciones de qué se muestra en el overlay (el streamer las activa o desactiva desde el dashboard).
 const OVERLAY_OPTION_KEYS = [
-  'showStatus', // barra de mensaje de arriba ("¡Elige tu país!...") y la actividad que aparece en ella
+  'showStatus',     // barra de mensaje de arriba ("¡Elige tu país!...") y la actividad que aparece en ella
+  'showGiftAlerts', // recuadro que avisa de cada regalo ("juan envió Rosa +5 a CUBA")
 ];
 
 function defaultOverlayOptions() {
-  return { showStatus: true };
+  return { showStatus: true, showGiftAlerts: true };
 }
 
 // Rellena lo que falte con el valor por defecto (configuraciones guardadas antes de existir esta opción)
