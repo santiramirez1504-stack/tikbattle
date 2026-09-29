@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { OVERLAY_SIZE_KEYS, DEFAULT_SIZE } = require('../utils/overlaySizes');
 
 // Configuración del juego "Batalla de Países" de cada streamer (una por usuario).
 const countrySchema = new mongoose.Schema(
@@ -21,6 +22,12 @@ const giftSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Tamaño de cada parte del overlay, en % (100 = normal). Ej: { flags: 80, points: 120, ... }
+const overlaySizesSchema = new mongoose.Schema(
+  Object.fromEntries(OVERLAY_SIZE_KEYS.map((key) => [key, { type: Number, default: DEFAULT_SIZE }])),
+  { _id: false }
+);
+
 const gameConfigSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
@@ -28,6 +35,7 @@ const gameConfigSchema = new mongoose.Schema(
     autoRestartSeconds: { type: Number, required: true, default: 0 },
     countries: { type: [countrySchema], required: true },
     gifts: { type: [giftSchema], default: [] },
+    overlaySizes: { type: overlaySizesSchema, default: () => ({}) },
   },
   { timestamps: true }
 );

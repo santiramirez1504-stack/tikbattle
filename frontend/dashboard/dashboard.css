@@ -500,3 +500,38 @@
     grid-row: 3;
   }
 }
+
+/* ===== Tamaños del overlay ===== */
+.size-list {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.size-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.size-row label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.size-value {
+  min-width: 52px;
+  color: var(--accent-2);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.size-row input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}

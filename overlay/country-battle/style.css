@@ -52,6 +52,20 @@ body {
   height: 960px;
   transform: translate(-50%, -50%) scale(var(--scale, 1));
   overflow: hidden;
+  /* Tamaño de cada parte (1 = 100 %). Los cambia el streamer desde el dashboard; game.js los pone aquí.
+     Se aplican con "zoom": el navegador vuelve a dibujar esa parte a su nuevo tamaño (nítida, no estirada). */
+  --s-flags: 1;
+  --s-points: 1;
+  --s-mvp: 1;
+  --s-timer: 1;
+  --s-status: 1;
+  --s-alerts: 1;
+  --s-countdown: 1;
+  --s-x2: 1;
+  --s-podium: 1;
+  --content-top: 166px;      /* dónde termina el bloque de arriba (lo mide game.js) */
+  /* Ancho de cada columna de banderas: crece si las banderas, el MVP o los puntos se agrandan */
+  --col-w: calc(100px * max(var(--s-flags), var(--s-mvp), var(--s-points) * 0.8));
 }
 
 /* ===== Arriba en el centro: tiempo y estado ===== */
@@ -68,6 +82,7 @@ body {
 }
 
 .timer {
+  zoom: var(--s-timer);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -96,6 +111,7 @@ body {
 
 /* Estado (y encima, la última actividad) */
 .status-wrap {
+  zoom: var(--s-status);
   position: relative;
   display: flex;
   width: 100%;
@@ -178,9 +194,9 @@ body {
 /* ===== Banderas a los lados ===== */
 .side {
   position: absolute;
-  top: 166px;                /* empiezan debajo del tiempo y de la cápsula del mensaje */
+  top: calc(var(--content-top) + 6px); /* empiezan debajo del tiempo y de la cápsula del mensaje */
   bottom: 130px;             /* deja libre casi toda la zona de comentarios de la app de TikTok */
-  width: 100px;
+  width: var(--col-w);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -211,6 +227,7 @@ body {
 }
 
 .team-flag-wrap {
+  zoom: var(--s-flags);
   position: relative;
   padding-top: 13px;         /* sitio para la corona */
 }
@@ -287,6 +304,7 @@ body {
 
 /* Puntos */
 .team-points {
+  zoom: var(--s-points);
   position: relative;
   font-size: 27px;
   font-weight: 900;
@@ -301,6 +319,7 @@ body {
 
 /* Debajo: el MVP (foto + nombre) o, en la espera, qué hay que escribir */
 .team-sub {
+  zoom: var(--s-mvp);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -377,16 +396,28 @@ body {
 }
 
 /* ===== "¡X toma el liderato!" ===== */
-.leader-banner {
+/* ===== Pila del centro (aviso de liderato + alerta de regalo) ===== */
+.center-stack {
   position: absolute;
-  top: 190px;
-  left: 50%;
-  z-index: 3;
+  top: calc(var(--content-top) + 8px);
+  /* Solo el hueco entre las 2 columnas: las alertas nunca tapan las banderas */
+  left: calc(var(--col-w) + 10px);
+  right: calc(var(--col-w) + 10px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.leader-banner {
+  zoom: var(--s-alerts);
   display: flex;
   align-items: center;
   gap: 8px;
   width: max-content;
-  max-width: 280px;          /* cabe entre las 2 columnas de banderas (si el nombre es largo, 2 líneas) */
+  max-width: min(280px, 100%); /* cabe entre las 2 columnas de banderas (si el nombre es largo, 2 líneas) */
   padding: 6px 12px;
   border-radius: 18px;
   background: linear-gradient(90deg, var(--accent), #ff7a45);
@@ -396,7 +427,6 @@ body {
   line-height: 1.15;
   text-align: center;
   text-transform: uppercase;
-  transform: translateX(-50%);
   animation: banner-in 2.6s ease forwards;
 }
 
@@ -412,15 +442,12 @@ body {
 
 /* ===== Alerta de regalo ===== */
 .gift-alert {
-  position: absolute;
-  top: 236px;
-  left: 50%;
-  z-index: 5;
+  zoom: var(--s-alerts);
   display: flex;
   align-items: center;
   gap: 10px;
   width: 290px;
-  margin-left: -145px;
+  max-width: 100%;           /* nunca más ancha que el hueco entre las columnas */
   padding: 7px 12px;
   border: 3px solid var(--gold);
   border-radius: 18px;
@@ -487,6 +514,9 @@ body {
   position: absolute;
   inset: 0;
   z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
 }
 
@@ -504,8 +534,8 @@ body {
 
 .bolt {
   position: absolute;
-  width: 74px;
-  height: 148px;
+  width: calc(74px * var(--s-x2));
+  height: calc(148px * var(--s-x2));
   fill: #ffe44d;
   stroke: #fff;
   stroke-width: 3;
@@ -514,16 +544,14 @@ body {
   animation: bolt-strike 1.4s ease-out forwards;
 }
 
-.bolt-1 { top: 290px; left: 118px; transform: rotate(-18deg); }
-.bolt-2 { top: 290px; right: 118px; transform: rotate(18deg) scaleX(-1); animation-delay: 0.12s; }
-.bolt-3 { top: 470px; left: 150px; width: 54px; height: 108px; transform: rotate(-35deg); animation-delay: 0.3s; }
-.bolt-4 { top: 470px; right: 150px; width: 54px; height: 108px; transform: rotate(35deg) scaleX(-1); animation-delay: 0.42s; }
+.bolt-1 { top: calc(50% - 200px * var(--s-x2)); left: calc(50% - 152px * var(--s-x2)); transform: rotate(-18deg); }
+.bolt-2 { top: calc(50% - 200px * var(--s-x2)); right: calc(50% - 152px * var(--s-x2)); transform: rotate(18deg) scaleX(-1); animation-delay: 0.12s; }
+.bolt-3 { top: calc(50% - 20px * var(--s-x2)); left: calc(50% - 120px * var(--s-x2)); width: calc(54px * var(--s-x2)); height: calc(108px * var(--s-x2)); transform: rotate(-35deg); animation-delay: 0.3s; }
+.bolt-4 { top: calc(50% - 20px * var(--s-x2)); right: calc(50% - 120px * var(--s-x2)); width: calc(54px * var(--s-x2)); height: calc(108px * var(--s-x2)); transform: rotate(35deg) scaleX(-1); animation-delay: 0.42s; }
 
 .double-text {
-  position: absolute;
-  top: 348px;
-  left: 0;
-  right: 0;
+  zoom: var(--s-x2);
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -557,12 +585,12 @@ body {
 
 /* ===== Cuenta atrás de los últimos 10 segundos ===== */
 .countdown {
+  zoom: var(--s-countdown);
   position: absolute;
-  top: 330px;
-  left: 0;
-  right: 0;
+  inset: 0;
   z-index: 4;
   display: flex;
+  align-items: center;
   justify-content: center;
   pointer-events: none;
   color: #fff;
@@ -586,13 +614,12 @@ body {
 
 .result {
   position: absolute;
-  top: 300px;
-  left: 0;
-  right: 0;
+  inset: 0;
   z-index: 6;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
 }
 
@@ -601,6 +628,7 @@ body {
 }
 
 .result-title {
+  zoom: var(--s-podium);
   padding: 6px 16px;
   border-radius: 999px;
   background: var(--pill-bg);
@@ -614,6 +642,7 @@ body {
 
 /* 2º a la izquierda, 1º en el centro (más alto), 3º a la derecha */
 .podium {
+  zoom: var(--s-podium);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -751,11 +780,11 @@ body {
 }
 
 @keyframes banner-in {
-  0% { transform: translateX(-50%) scale(0.4); opacity: 0; }
-  12% { transform: translateX(-50%) scale(1.08); opacity: 1; }
-  20% { transform: translateX(-50%) scale(1); }
-  85% { transform: translateX(-50%) scale(1); opacity: 1; }
-  100% { transform: translateX(-50%) scale(0.9); opacity: 0; }
+  0% { transform: scale(0.4); opacity: 0; }
+  12% { transform: scale(1.08); opacity: 1; }
+  20% { transform: scale(1); }
+  85% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
 }
 
 @keyframes feed-in {

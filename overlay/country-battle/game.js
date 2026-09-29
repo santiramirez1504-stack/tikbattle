@@ -567,6 +567,29 @@ function launchConfetti(colors) {
   requestAnimationFrame(frame);
 }
 
+// ---------- Tamaños (los elige el streamer en el dashboard) ----------
+
+const SIZE_KEYS = ['flags', 'points', 'mvp', 'timer', 'status', 'alerts', 'countdown', 'x2', 'podium'];
+let lastSizesKey = null;
+
+function applySizes(sizes) {
+  const key = JSON.stringify(sizes || {});
+  if (key === lastSizesKey) return; // no ha cambiado
+  lastSizesKey = key;
+  for (const name of SIZE_KEYS) {
+    const percent = sizes && Number.isFinite(sizes[name]) ? sizes[name] : 100;
+    stageEl.style.setProperty(`--s-${name}`, String(percent / 100));
+  }
+}
+
+// Las banderas y las alertas empiezan justo debajo del bloque de arriba (tiempo + mensaje),
+// midan lo que midan (cambia con su tamaño y si el mensaje ocupa 1 o 2 líneas)
+const topEl = el('top');
+function placeContentBelowTop() {
+  stageEl.style.setProperty('--content-top', `${Math.round(topEl.offsetTop + topEl.offsetHeight + 8)}px`);
+}
+new ResizeObserver(placeContentBelowTop).observe(topEl);
+
 // ---------- Dibujo general ----------
 
 function render(state) {
@@ -574,6 +597,7 @@ function render(state) {
   lastState = state;
   lastStatus = state.gameStatus;
 
+  applySizes(state.overlaySizes);
   statusEl.textContent = STATUS_TEXT[state.gameStatus] || '';
   renderTimer(state);
   renderDouble(state);

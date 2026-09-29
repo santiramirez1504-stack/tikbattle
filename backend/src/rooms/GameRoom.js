@@ -6,6 +6,7 @@ const TikTokService = require('../tiktok/TikTokService');
 const gameConfigService = require('../services/gameConfigService');
 const gameHistoryService = require('../services/gameHistoryService');
 const activeRoomService = require('../services/activeRoomService');
+const { normalizeOverlaySizes } = require('../utils/overlaySizes');
 const { getCachedGiftImage } = require('../tiktok/giftCatalog');
 
 const { GAME_STATUS } = GameEngine;
@@ -34,6 +35,7 @@ class GameRoom extends EventEmitter {
     // Países y regalos con los que está funcionando el juego ahora mismo (con comandos, para poder guardarlos)
     this.activeCountries = config.countries;
     this.activeGifts = config.gifts;
+    this.overlaySizes = normalizeOverlaySizes(config.overlaySizes);
 
     this.game = new GameEngine(config.countries, { durationSeconds: config.durationSeconds });
     this.chatProcessor = new ChatProcessor(this.game, config.countries);
@@ -102,7 +104,15 @@ class GameRoom extends EventEmitter {
       gifts: this.activeGifts
         .map(({ giftId, name, points }) => ({ giftId, name, points, imageUrl: getCachedGiftImage(giftId) }))
         .sort((a, b) => b.points - a.points),
+      // Tamaño de cada parte del overlay (lo ajusta el streamer desde el dashboard)
+      overlaySizes: this.overlaySizes,
     };
+  }
+
+  // Cambia los tamaños del overlay al instante (en todos los overlays abiertos de este streamer)
+  applyOverlaySizes(sizes) {
+    this.overlaySizes = normalizeOverlaySizes(sizes);
+    this.emit('game', 'settings');
   }
 
   // Punto de entrada único para los eventos, vengan del simulador o de TikTok.
@@ -182,6 +192,7 @@ class GameRoom extends EventEmitter {
   // Duración y reinicio automático: siempre (la duración vale para la próxima partida).
   // Países: solo si no hay una partida en curso (si la hay, se aplican en la siguiente).
   applyConfig(config) {
+    this.overlaySizes = normalizeOverlaySizes(config.overlaySizes);
     this.activeGifts = config.gifts;
     this.giftProcessor.setGifts(config.gifts);
 

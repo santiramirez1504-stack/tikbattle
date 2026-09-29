@@ -2,6 +2,7 @@ const roomManager = require('../rooms/roomManager');
 const gameConfigService = require('../services/gameConfigService');
 const gameHistoryService = require('../services/gameHistoryService');
 const validateGameConfig = require('../utils/validateGameConfig');
+const { validateOverlaySizes } = require('../utils/overlaySizes');
 
 const OVERLAY_PATH = '/overlay/country-battle/';
 
@@ -82,6 +83,18 @@ const saveConfig = withRoom(async (room, req, res) => {
   res.json(saved);
 });
 
+// PUT /api/game/overlay-sizes   body: { flags: 80, points: 120, ... } (en %, de 60 a 150)
+// Guarda los tamaños y los aplica al instante en el overlay
+const saveOverlaySizes = withRoom(async (room, req, res) => {
+  const { sizes, error } = validateOverlaySizes(req.body);
+  if (error) {
+    return res.status(400).json({ error });
+  }
+  const saved = await gameConfigService.saveOverlaySizes(req.user.id, sizes);
+  room.applyOverlaySizes(saved.overlaySizes);
+  res.json(saved.overlaySizes);
+});
+
 // GET /api/game/history?limit=10 -> últimas partidas del streamer
 async function getHistory(req, res, next) {
   try {
@@ -125,6 +138,7 @@ async function regenerateOverlay(req, res, next) {
 }
 
 module.exports = {
+  saveOverlaySizes,
   getState,
   startGame,
   resetGame,

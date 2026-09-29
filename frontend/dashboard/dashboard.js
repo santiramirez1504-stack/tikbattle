@@ -253,6 +253,84 @@ el('copy-overlay').addEventListener('click', async () => {
   }
 });
 
+// ---------- Tamaños del overlay ----------
+// Una barra para cada parte. Al moverla se guarda sola (tras una pausa corta) y el overlay cambia al instante.
+
+const SIZE_MIN = 60;
+const SIZE_MAX = 150;
+const SIZE_STEP = 5;
+const SIZE_SAVE_DELAY_MS = 300;
+const SIZE_PARTS = [
+  { key: 'flags', label: '🏳️ Banderas' },
+  { key: 'points', label: '🔢 Puntos' },
+  { key: 'mvp', label: '⭐ MVP (foto y nombre)' },
+  { key: 'timer', label: '⏱ Tiempo' },
+  { key: 'status', label: '💬 Mensaje y actividad' },
+  { key: 'alerts', label: '🎁 Alertas de regalo y liderato' },
+  { key: 'countdown', label: '🔟 Cuenta atrás final' },
+  { key: 'x2', label: '⚡ Anuncio X2' },
+  { key: 'podium', label: '🏆 Podio final' },
+];
+
+let overlaySizes = {};
+let sizesSaveTimer = null;
+
+function renderSizes(sizes) {
+  overlaySizes = { ...sizes };
+  const list = el('size-list');
+  list.textContent = '';
+
+  for (const { key, label } of SIZE_PARTS) {
+    const row = document.createElement('div');
+    row.className = 'size-row';
+
+    const id = `size-${key}`;
+    const name = document.createElement('label');
+    name.htmlFor = id;
+    name.textContent = label;
+
+    const value = document.createElement('span');
+    value.className = 'size-value';
+    value.textContent = `${overlaySizes[key]} %`;
+
+    const range = document.createElement('input');
+    range.type = 'range';
+    range.id = id;
+    range.min = String(SIZE_MIN);
+    range.max = String(SIZE_MAX);
+    range.step = String(SIZE_STEP);
+    range.value = String(overlaySizes[key]);
+    range.addEventListener('input', () => {
+      overlaySizes[key] = Number(range.value);
+      value.textContent = `${range.value} %`;
+      scheduleSizesSave();
+    });
+
+    row.append(name, value, range);
+    list.append(row);
+  }
+}
+
+function scheduleSizesSave() {
+  setBadge(el('sizes-status'), { text: 'Guardando...', className: 'warn' });
+  clearTimeout(sizesSaveTimer);
+  sizesSaveTimer = setTimeout(saveSizes, SIZE_SAVE_DELAY_MS);
+}
+
+async function saveSizes() {
+  try {
+    overlaySizes = await call('PUT', '/api/game/overlay-sizes', overlaySizes);
+    setBadge(el('sizes-status'), { text: 'Guardado ✓', className: 'ok' });
+  } catch (error) {
+    setBadge(el('sizes-status'), { text: 'Sin guardar', className: 'warn' });
+  }
+}
+
+el('reset-sizes').addEventListener('click', () => {
+  renderSizes(Object.fromEntries(SIZE_PARTS.map(({ key }) => [key, 100])));
+  scheduleSizesSave();
+});
+
 // ---------- Configuración (editor) ----------
 
 const MIN_COUNTRIES = 2;
@@ -736,6 +814,7 @@ async function init() {
     el('user-name').textContent = user.name;
     el('admin-link').hidden = user.role !== 'ADMIN';
     renderConfig(config);
+    renderSizes(config.overlaySizes);
     renderTikTok(tiktokStatus);
   } catch (error) {
     return; // call() ya redirigió al login o mostró el error
