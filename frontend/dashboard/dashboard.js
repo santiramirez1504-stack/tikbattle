@@ -326,6 +326,24 @@ async function saveSizes() {
   }
 }
 
+// Mostrar u ocultar la barra de mensaje del overlay (se guarda y se aplica al instante)
+function renderOverlayOptions(options) {
+  el('show-status').checked = !options || options.showStatus !== false;
+}
+
+el('show-status').addEventListener('change', async (event) => {
+  const showStatus = event.target.checked;
+  setBadge(el('sizes-status'), { text: 'Guardando...', className: 'warn' });
+  try {
+    renderOverlayOptions(await call('PUT', '/api/game/overlay-options', { showStatus }));
+    setBadge(el('sizes-status'), { text: 'Guardado ✓', className: 'ok' });
+    showToast(showStatus ? 'Barra de mensaje visible en el overlay' : 'Barra de mensaje oculta en el overlay');
+  } catch (error) {
+    event.target.checked = !showStatus; // no se guardó: vuelve como estaba
+    setBadge(el('sizes-status'), { text: 'Sin guardar', className: 'warn' });
+  }
+});
+
 el('reset-sizes').addEventListener('click', () => {
   renderSizes(Object.fromEntries(SIZE_PARTS.map(({ key }) => [key, 100])));
   scheduleSizesSave();
@@ -815,6 +833,7 @@ async function init() {
     el('admin-link').hidden = user.role !== 'ADMIN';
     renderConfig(config);
     renderSizes(config.overlaySizes);
+    renderOverlayOptions(config.overlayOptions);
     renderTikTok(tiktokStatus);
   } catch (error) {
     return; // call() ya redirigió al login o mostró el error

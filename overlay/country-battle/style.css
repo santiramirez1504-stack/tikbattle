@@ -130,6 +130,11 @@ body {
   text-align: center;
 }
 
+/* Barra de mensaje oculta desde el dashboard (también la actividad, que aparece dentro de ella) */
+.stage.hide-status .status-wrap {
+  display: none;
+}
+
 .status-wrap:has(.feed-item) .status {
   visibility: hidden;
 }

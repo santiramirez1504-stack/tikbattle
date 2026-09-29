@@ -3,6 +3,7 @@ const gameConfigService = require('../services/gameConfigService');
 const gameHistoryService = require('../services/gameHistoryService');
 const validateGameConfig = require('../utils/validateGameConfig');
 const { validateOverlaySizes } = require('../utils/overlaySizes');
+const { validateOverlayOptions } = require('../utils/overlayOptions');
 
 const OVERLAY_PATH = '/overlay/country-battle/';
 
@@ -95,6 +96,18 @@ const saveOverlaySizes = withRoom(async (room, req, res) => {
   res.json(saved.overlaySizes);
 });
 
+// PUT /api/game/overlay-options   body: { showStatus: true | false }
+// Guarda qué partes se muestran y lo aplica al instante en el overlay
+const saveOverlayOptions = withRoom(async (room, req, res) => {
+  const { options, error } = validateOverlayOptions(req.body);
+  if (error) {
+    return res.status(400).json({ error });
+  }
+  const saved = await gameConfigService.saveOverlayOptions(req.user.id, options);
+  room.applyOverlayOptions(saved.overlayOptions);
+  res.json(saved.overlayOptions);
+});
+
 // GET /api/game/history?limit=10 -> últimas partidas del streamer
 async function getHistory(req, res, next) {
   try {
@@ -139,6 +152,7 @@ async function regenerateOverlay(req, res, next) {
 
 module.exports = {
   saveOverlaySizes,
+  saveOverlayOptions,
   getState,
   startGame,
   resetGame,

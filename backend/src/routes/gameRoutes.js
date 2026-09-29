@@ -16,6 +16,7 @@ router.post('/stop', gameController.stopGame);
 router.get('/config', gameController.getConfig);
 router.put('/config', gameController.saveConfig);
 router.put('/overlay-sizes', gameController.saveOverlaySizes);
+router.put('/overlay-options', gameController.saveOverlayOptions);
 router.get('/history', gameController.getHistory);
 router.delete('/history/:id', gameController.deleteHistoryItem);
 router.get('/overlay', gameController.getOverlay);

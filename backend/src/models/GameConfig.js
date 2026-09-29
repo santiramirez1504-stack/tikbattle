@@ -36,6 +36,10 @@ const gameConfigSchema = new mongoose.Schema(
     countries: { type: [countrySchema], required: true },
     gifts: { type: [giftSchema], default: [] },
     overlaySizes: { type: overlaySizesSchema, default: () => ({}) },
+    // Qué se muestra en el overlay. Ej: { showStatus: false } oculta la barra de mensaje
+    overlayOptions: {
+      showStatus: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );

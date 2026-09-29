@@ -3,6 +3,7 @@ const { DEFAULT_COUNTRIES } = require('../games/countryBattle/countries');
 const { DEFAULT_GIFTS } = require('../games/countryBattle/gifts');
 const { guessFlagCode } = require('../utils/flags');
 const { defaultOverlaySizes, normalizeOverlaySizes } = require('../utils/overlaySizes');
+const { defaultOverlayOptions, normalizeOverlayOptions } = require('../utils/overlayOptions');
 
 // Países con su bandera. Las configuraciones guardadas antes de existir las banderas no la tienen:
 // en ese caso se adivina a partir del nombre (ej. "México" -> "mx").
@@ -20,6 +21,7 @@ function getDefaultConfig() {
     countries: withFlags(DEFAULT_COUNTRIES),
     gifts: DEFAULT_GIFTS.map(({ giftId, name, points }) => ({ giftId, name, points })),
     overlaySizes: defaultOverlaySizes(),
+    overlayOptions: defaultOverlayOptions(),
   };
 }
 
@@ -31,6 +33,7 @@ function toPlainConfig(doc) {
     countries: withFlags(doc.countries),
     gifts: doc.gifts.map(({ giftId, name, points }) => ({ giftId, name, points })),
     overlaySizes: normalizeOverlaySizes(doc.overlaySizes),
+    overlayOptions: normalizeOverlayOptions(doc.overlayOptions),
   };
 }
 
@@ -64,4 +67,18 @@ async function saveOverlaySizes(userId, sizes) {
   return toPlainConfig(doc);
 }
 
-module.exports = { getDefaultConfig, getConfig, saveConfig, saveOverlaySizes };
+// Guarda solo las opciones de qué se muestra en el overlay
+async function saveOverlayOptions(userId, options) {
+  const exists = await GameConfig.exists({ user: userId });
+  if (!exists) {
+    return saveConfig(userId, { ...getDefaultConfig(), overlayOptions: options });
+  }
+  const doc = await GameConfig.findOneAndUpdate(
+    { user: userId },
+    { $set: { overlayOptions: options } },
+    { new: true, runValidators: true }
+  ).lean();
+  return toPlainConfig(doc);
+}
+
+module.exports = { getDefaultConfig, getConfig, saveConfig, saveOverlaySizes, saveOverlayOptions };

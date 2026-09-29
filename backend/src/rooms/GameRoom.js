@@ -7,6 +7,7 @@ const gameConfigService = require('../services/gameConfigService');
 const gameHistoryService = require('../services/gameHistoryService');
 const activeRoomService = require('../services/activeRoomService');
 const { normalizeOverlaySizes } = require('../utils/overlaySizes');
+const { normalizeOverlayOptions } = require('../utils/overlayOptions');
 const { getCachedGiftImage } = require('../tiktok/giftCatalog');
 
 const { GAME_STATUS } = GameEngine;
@@ -36,6 +37,7 @@ class GameRoom extends EventEmitter {
     this.activeCountries = config.countries;
     this.activeGifts = config.gifts;
     this.overlaySizes = normalizeOverlaySizes(config.overlaySizes);
+    this.overlayOptions = normalizeOverlayOptions(config.overlayOptions);
 
     this.game = new GameEngine(config.countries, { durationSeconds: config.durationSeconds });
     this.chatProcessor = new ChatProcessor(this.game, config.countries);
@@ -106,7 +108,15 @@ class GameRoom extends EventEmitter {
         .sort((a, b) => b.points - a.points),
       // Tamaño de cada parte del overlay (lo ajusta el streamer desde el dashboard)
       overlaySizes: this.overlaySizes,
+      // Qué partes se muestran (ej. la barra de mensaje)
+      overlayOptions: this.overlayOptions,
     };
+  }
+
+  // Cambia qué se muestra en el overlay al instante
+  applyOverlayOptions(options) {
+    this.overlayOptions = normalizeOverlayOptions(options);
+    this.emit('game', 'settings');
   }
 
   // Cambia los tamaños del overlay al instante (en todos los overlays abiertos de este streamer)
@@ -193,6 +203,7 @@ class GameRoom extends EventEmitter {
   // Países: solo si no hay una partida en curso (si la hay, se aplican en la siguiente).
   applyConfig(config) {
     this.overlaySizes = normalizeOverlaySizes(config.overlaySizes);
+    this.overlayOptions = normalizeOverlayOptions(config.overlayOptions);
     this.activeGifts = config.gifts;
     this.giftProcessor.setGifts(config.gifts);
 

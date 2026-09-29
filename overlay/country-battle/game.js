@@ -653,6 +653,8 @@ function render(state) {
   lastStatus = state.gameStatus;
 
   applySizes(state.overlaySizes);
+  // El streamer puede ocultar la barra de mensaje desde el dashboard (las banderas suben solas)
+  stageEl.classList.toggle('hide-status', Boolean(state.overlayOptions && state.overlayOptions.showStatus === false));
   statusEl.textContent = STATUS_TEXT[state.gameStatus] || '';
   renderTimer(state);
   renderDouble(state);
