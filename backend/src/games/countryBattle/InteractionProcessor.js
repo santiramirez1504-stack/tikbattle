@@ -4,17 +4,24 @@
 // Solo cuentan si el espectador ya eligió país con un comentario (igual que los regalos).
 
 const LIKES_PER_POINT = 10; // cada 10 likes = 1 punto
+// Tope anti-abuso: los likes son gratis e ilimitados (tocar sin parar o un autoclicker), así que cada
+// espectador puede ganar como mucho esto por likes en cada minuto. Los likes de más no cuentan.
+const MAX_LIKE_POINTS_PER_MINUTE = 10;
+const LIKE_WINDOW_MS = 60 * 1000;
 const FOLLOW_POINTS = 5;    // seguir al streamer: una vez por partida
 const SHARE_POINTS = 5;     // compartir el LIVE: una vez por partida
 
 const ONCE_PER_GAME = { FOLLOW: FOLLOW_POINTS, SHARE: SHARE_POINTS };
 
 class InteractionProcessor {
-  constructor(gameEngine) {
+  // now: reloj inyectable para las pruebas
+  constructor(gameEngine, { now = Date.now } = {}) {
     this.gameEngine = gameEngine;
+    this.now = now;
     this.gameKey = null;           // partida a la que pertenecen los contadores de abajo
     this.pendingLikes = new Map(); // usuario -> likes que aún no llegan a 1 punto
     this.rewarded = new Set();     // "FOLLOW|usuario" / "SHARE|usuario" ya premiados en esta partida
+    this.likeWindows = new Map();  // usuario -> { start, points }: puntos por likes en su minuto actual
   }
 
   // Los contadores son de cada partida: si empezó otra, se vacían
@@ -24,6 +31,7 @@ class InteractionProcessor {
       this.gameKey = key;
       this.pendingLikes.clear();
       this.rewarded.clear();
+      this.likeWindows.clear();
     }
   }
 
@@ -48,7 +56,19 @@ class InteractionProcessor {
       const likes = Number.isInteger(count) && count > 0 ? Math.min(count, 1000) : 0;
       const total = (this.pendingLikes.get(username) || 0) + likes;
       points = Math.floor(total / LIKES_PER_POINT);
-      this.pendingLikes.set(username, total % LIKES_PER_POINT);
+
+      const room = this.likeRoom(username);
+      if (room === 0) {
+        this.pendingLikes.set(username, 0); // ya llegó al tope: estos likes no cuentan
+        return { assigned: false, reason: 'LIKE_LIMIT_REACHED' };
+      }
+      if (points > room) {
+        points = room;
+        this.pendingLikes.set(username, 0); // lo que pasa del tope se descarta
+      } else {
+        this.pendingLikes.set(username, total % LIKES_PER_POINT);
+      }
+      this.likeWindows.get(username).points += points;
     } else if (ONCE_PER_GAME[type]) {
       const key = `${type}|${username}`;
       if (this.rewarded.has(key)) {
@@ -68,9 +88,21 @@ class InteractionProcessor {
     const applied = this.gameEngine.addPoints(countryId, points, username);
     return { assigned: true, countryId, points: applied };
   }
+
+  // Cuántos puntos por likes le quedan al espectador en su minuto actual (empieza uno nuevo si pasó)
+  likeRoom(username) {
+    const now = this.now();
+    let window = this.likeWindows.get(username);
+    if (!window || now - window.start >= LIKE_WINDOW_MS) {
+      window = { start: now, points: 0 };
+      this.likeWindows.set(username, window);
+    }
+    return MAX_LIKE_POINTS_PER_MINUTE - window.points;
+  }
 }
 
 module.exports = InteractionProcessor;
+module.exports.MAX_LIKE_POINTS_PER_MINUTE = MAX_LIKE_POINTS_PER_MINUTE;
 module.exports.LIKES_PER_POINT = LIKES_PER_POINT;
 module.exports.FOLLOW_POINTS = FOLLOW_POINTS;
 module.exports.SHARE_POINTS = SHARE_POINTS;

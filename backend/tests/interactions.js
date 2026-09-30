@@ -7,7 +7,8 @@ const { DEFAULT_COUNTRIES } = require('../src/games/countryBattle/countries');
 // Sin X2 para que los puntos sean exactos
 const game = new GameEngine(DEFAULT_COUNTRIES, { random: () => 1 });
 const chat = new ChatProcessor(game, DEFAULT_COUNTRIES);
-const interactions = new InteractionProcessor(game);
+let clock = 0; // reloj falso: se adelanta a mano para probar el tope por minuto
+const interactions = new InteractionProcessor(game, { now: () => clock });
 
 let failures = 0;
 function check(label, actual, expected) {
@@ -44,6 +45,16 @@ chat.processMessage({ username: 'juan', message: 'Mexico' });
 check('10 likes tras cambiar a México', send('LIKE', 'juan', 10).countryId, 'mexico');
 check('México', points('mexico'), 1);
 
+// Tope: como mucho 10 puntos por likes por persona cada minuto (juan ya lleva 6 este minuto)
+chat.processMessage({ username: 'ana', message: 'Cuba' });
+check('ana 500 likes de golpe (autoclicker) -> puntos', send('LIKE', 'ana', 500).points, 10);
+check('ana 50 likes más en el mismo minuto', send('LIKE', 'ana', 50).reason, 'LIKE_LIMIT_REACHED');
+check('juan (llevaba 6) 100 likes -> solo le quedan', send('LIKE', 'juan', 100).points, 4);
+clock += 60 * 1000; // pasa un minuto
+check('ana 1 minuto después, 30 likes -> puntos', send('LIKE', 'ana', 30).points, 3);
+check('ana: los likes de más del minuto anterior no se guardaron', send('LIKE', 'ana', 9).reason, 'NOT_ENOUGH_LIKES');
+check('Seguir no cuenta para el tope de likes', send('FOLLOW', 'ana').points, 5);
+
 // Nueva partida: los contadores empiezan de cero
 game.finish();
 game.reset();
@@ -58,5 +69,5 @@ if (failures) {
   console.log(`\n❌ ${failures} comprobación(es) fallaron`);
   process.exitCode = 1;
 } else {
-  console.log('\n✅ Likes (1 punto cada 10), seguir (+5) y compartir (+5, una vez por partida) correctos');
+  console.log('\n✅ Likes (1 punto cada 10, máx. 10 puntos por minuto), seguir (+5) y compartir (+5, una vez por partida) correctos');
 }
