@@ -2,7 +2,7 @@
 
 Plataforma para streamers de TikTok LIVE: los comentarios y regalos del LIVE mueven un juego que aparece como overlay en TikTok LIVE Studio (también funciona en OBS/Streamlabs).
 
-Primer juego: **Batalla de Países**. Los espectadores escriben el nombre de un país en el chat para darle puntos, y los regalos suman más.
+Primer juego: **Batalla de Países**. Los espectadores escriben el nombre de un país **una vez** en el chat para unirse, y suman puntos para él con likes, seguir, compartir el LIVE y regalos. Ver [Para evitar sanciones al streamer](#para-evitar-sanciones-al-streamer) antes de cambiar cómo se ganan puntos.
 
 ## Estado del proyecto (27/09/2026)
 
@@ -172,6 +172,58 @@ Si se pasa del límite, el servidor no se cae: los puntos llegan al overlay con 
 2. Instalar Docker y copiar el proyecto, `backend/.env` y `.env` (con `DOMAIN`), igual que en Oracle.
 3. Apuntar el dominio a la IP del nuevo servidor y ejecutar `docker compose up -d --build`.
 4. En Atlas, permitir la IP del nuevo servidor. El overlay no cambia de URL si el dominio es el mismo.
+
+## Para evitar sanciones al streamer
+
+**Por qué existe esta sección:** el 29/09/2026 dos amigos probaron el juego y TikTok les puso un **baneo de 7 días** por *"infracción de integridad y autenticidad"*. Es la norma de TikTok contra el spam y la interacción falsa o forzada. La causa más probable: el juego premiaba cada comentario (invitaba a escribir "Cuba, Cuba, Cuba…") y lo probaron entre cuentas amigas. Nuestra conexión con TikTok es de solo lectura y anónima, así que no parece la causa, pero tampoco se puede descartar. Por eso aplicamos un **"modo seguro"**. **Cualquier desarrollo futuro (juegos nuevos, planes FREE/PRO, textos) tiene que respetarlo.**
+
+### Reglas del juego (no romperlas)
+
+| Regla | Dónde está | Por qué |
+|---|---|---|
+| **Solo el primer comentario** del país de cada espectador suma (+1) en cada partida. Repetirlo o cambiar de país no suma. | `ChatProcessor.js` (`POINTS_PER_JOIN`) | Premiar cada comentario invita al spam, que es lo que TikTok castiga. |
+| Los puntos "gratis" salen de **interacciones nativas de TikTok**: likes (10 = +1), seguir (+5) y compartir (+5). Seguir y compartir cuentan **una vez por espectador y partida**. | `InteractionProcessor.js` | Son acciones normales de TikTok, no texto repetido en el chat. Una sola vez evita dejar de seguir y volver a seguir para sumar. |
+| **Tope de likes: máximo 10 puntos por espectador y minuto.** Los likes de más se descartan. | `InteractionProcessor.js` (`MAX_LIKE_POINTS_PER_MINUTE`) | Evita que un autoclicker infle el marcador. |
+| Todo lo anterior solo cuenta si el espectador **ya eligió país**. | `InteractionProcessor.js`, `GiftProcessor.js` | Cada punto va a un país que el espectador eligió él mismo. |
+| Los **regalos no tienen tope.** | `GiftProcessor.js` | Se pagan con dinero real y son el ingreso del streamer. |
+| El **X2 sorpresa** (35 % de las partidas, últimos 30 s) se puede **desactivar** desde el dashboard. | `GameEngine.setDoubleFinalEnabled`, `overlayOptions.doubleFinal` | Crea urgencia al final. El streamer decide si lo quiere. |
+
+### Textos y comunicación
+
+- **El overlay solo explica cómo jugar e informa lo que pasa** (quién se unió, quién regaló, quién va ganando). **Nunca** pide regalos, likes ni seguidores, ni muestra una "lista de precios" de regalos para empujar a regalar. Por eso se quitó la tira de regalos.
+- **Nada de premios reales** (dinero, recargas, productos) a cambio de regalos o puntos. Los puntos no valen nada fuera del juego.
+- El dashboard tiene dos tarjetas que el streamer debe ver:
+  - **📖 Cómo se juega**, con un guion neutral para leer en el LIVE.
+  - **🛡️ Juega limpio en TikTok**, con lo que no debe hacer.
+  
+  Si cambian las reglas o los puntos, hay que **actualizar estas tarjetas**: los valores de likes, seguir y compartir están escritos a mano en `frontend/dashboard/index.html`.
+
+### Conexión con TikTok
+
+- **No existe una API oficial de TikTok** para leer comentarios y regalos de un LIVE (revisado el 29/09/2026 en developers.tiktok.com). Usamos `tiktok-live-connector` (no oficial) con la firma de Euler Stream, igual que el resto de herramientas de juegos para LIVE. Las condiciones de TikTok prohíben el acceso automático sin su permiso, así que esto es un **riesgo permanente**.
+- Para reducirlo, la conexión **nunca** debe:
+  - usar la cuenta del streamer (sin `sessionId`, cookies ni contraseñas);
+  - escribir comentarios, enviar regalos, dar likes o seguir a alguien.
+  
+  Solo lee, de forma anónima, desde nuestro servidor.
+- Toda la conexión está en `backend/src/tiktok/TikTokService.js`. Si TikTok publica una API oficial para el LIVE, se cambia solo ese archivo. **Hay que revisarlo cada pocos meses.**
+
+### Al desarrollar o probar
+
+- **No probar con cuentas reales** enviándose regalos o comentando en bucle. Usa el modo simulación (`SIMULATION_MODE=true`, solo en local), que nunca llega a TikTok:
+  - `/api/simulation/chat`, `/gift`, `/like`, `/follow` y `/share`.
+  - Las pruebas `npm run test:module3`, `test:interactions` y `test:double` comprueban estas reglas.
+- **Antes de añadir una forma nueva de ganar puntos o un juego nuevo**, pregúntate:
+  1. ¿Premia repetir algo muchas veces?
+  2. ¿Presiona para regalar?
+  3. ¿Se puede automatizar?
+  
+  Si alguna respuesta es "sí", ponle un límite (una vez por partida, un tope por minuto) o no lo hagas.
+- **Módulo 14 (FREE/PRO):** los planes pueden limitar funciones (duración, número de países, historial…), pero **ningún plan puede quitar estas protecciones**.
+
+### Pendiente relacionado
+
+- Aviso legal al registrarse: "TikBattle no está afiliado a TikTok; cada streamer es responsable de cumplir las normas de TikTok".
 
 ## Pendientes
 
