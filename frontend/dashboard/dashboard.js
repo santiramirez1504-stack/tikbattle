@@ -620,7 +620,76 @@ function renderConfig(config) {
   renderCountriesEditor();
   renderGiftsEditor();
   el('config-unsaved').hidden = true;
+  renderHowTo(config);
 }
+
+// ---------- Cómo se juega ----------
+
+const HOWTO_MAX_COUNTRIES_IN_SCRIPT = 6; // en el guion, si hay más se dice "y más"
+let howtoScript = '';
+
+// Rellena la tarjeta "Cómo se juega" con los países, regalos y duración guardados del streamer
+function renderHowTo(config) {
+  const commands = el('howto-commands');
+  commands.replaceChildren(...config.countries.map((country) => {
+    const chip = document.createElement('span');
+    chip.className = 'howto-chip';
+    chip.style.setProperty('--color', country.color);
+    chip.textContent = country.command;
+    return chip;
+  }));
+
+  const points = el('howto-points');
+  points.querySelectorAll('.howto-gift').forEach((item) => item.remove());
+  const gifts = [...config.gifts].sort((a, b) => a.points - b.points);
+  for (const gift of gifts) {
+    const item = document.createElement('li');
+    item.className = 'howto-gift';
+    const name = document.createElement('strong');
+    name.textContent = `${gift.name}:`;
+    item.append('🎁 ', name, ` +${gift.points}`);
+    points.append(item);
+  }
+
+  el('howto-duration').textContent = formatDuration(config.durationSeconds);
+
+  // Guion neutral: explica cómo se juega, sin presionar a regalar ni prometer premios
+  const names = config.countries.map((country) => country.command);
+  const shown = names.slice(0, HOWTO_MAX_COUNTRIES_IN_SCRIPT).join(', ');
+  const countriesText = names.length > HOWTO_MAX_COUNTRIES_IN_SCRIPT ? `${shown} y más` : shown;
+  howtoScript = [
+    '¡Vamos a jugar la Batalla de Países!',
+    `Para unirte, escribe UNA vez en el chat el nombre de tu país: ${countriesText}.`,
+    `Los likes, seguirme y compartir el LIVE suman puntos a tu país${gifts.length ? ', y los regalos también' : ''}.`,
+    'Quien más aporta sale como MVP de su país.',
+    `La partida dura ${formatDuration(config.durationSeconds)} y gana el país con más puntos. ¡Suerte!`,
+  ].join(' ');
+  el('howto-script-text').textContent = howtoScript;
+}
+
+el('copy-script').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(howtoScript);
+    showToast('Guion copiado ✅');
+  } catch (error) {
+    showToast('Selecciona el guion y cópialo con Ctrl + C', true);
+  }
+});
+
+// Recuerda si el streamer plegó la tarjeta (solo en este navegador)
+const HOWTO_OPEN_KEY = 'tikbattle_howto_open';
+try {
+  if (localStorage.getItem(HOWTO_OPEN_KEY) === 'false') el('howto').open = false;
+} catch (error) {
+  // sin acceso a localStorage: la tarjeta queda abierta
+}
+el('howto').addEventListener('toggle', () => {
+  try {
+    localStorage.setItem(HOWTO_OPEN_KEY, String(el('howto').open));
+  } catch (error) {
+    // no se pudo guardar: no pasa nada
+  }
+});
 
 el('duration').addEventListener('change', markUnsaved);
 el('auto-restart').addEventListener('change', markUnsaved);
@@ -763,7 +832,8 @@ el('catalog-search').addEventListener('input', renderCatalog);
 function formatDuration(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return minutes > 0 ? `${minutes} min ${seconds} s` : `${seconds} s`;
+  if (minutes === 0) return `${seconds} s`;
+  return seconds > 0 ? `${minutes} min ${seconds} s` : `${minutes} min`;
 }
 
 function renderHistory(sessions) {

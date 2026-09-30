@@ -26,6 +26,61 @@
   <div class="announcement" id="announcement" role="status" hidden></div>
 
   <main class="layout">
+    <!-- ===== Cómo se juega (para explicárselo al público) ===== -->
+    <section class="card wide-card howto-card">
+      <details id="howto" open>
+        <summary class="howto-summary">
+          <h2>📖 Cómo se juega</h2>
+          <span class="hint">Explícaselo a tu público al empezar</span>
+        </summary>
+
+        <ol class="howto-steps">
+          <li>
+            <span class="howto-num">1</span>
+            <div>
+              <h3>Elige tu país</h3>
+              <p>Escribe el nombre de tu país <strong>una sola vez</strong> en el chat para unirte (+1 punto). Repetirlo no suma.</p>
+              <p class="howto-chips" id="howto-commands"></p>
+            </div>
+          </li>
+          <li>
+            <span class="howto-num">2</span>
+            <div>
+              <h3>Suma puntos para tu país</h3>
+              <ul class="howto-points" id="howto-points">
+                <!-- Mismos valores que backend/src/games/countryBattle/InteractionProcessor.js -->
+                <li>❤️ <strong>Likes:</strong> cada 10 likes = +1 (máx. 10 puntos por minuto)</li>
+                <li>➕ <strong>Seguir:</strong> +5 (una vez por partida)</li>
+                <li>🔗 <strong>Compartir el LIVE:</strong> +5 (una vez por partida)</li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <span class="howto-num">3</span>
+            <div>
+              <h3>Durante la partida</h3>
+              <p>La partida dura <strong id="howto-duration">2 min</strong>. Las banderas se ordenan por puntos y debajo sale la foto del <strong>MVP</strong>: quien más aporta a su país. A veces, en los últimos 30 s llega el <strong>⚡X2</strong> sorpresa y todo vale el doble.</p>
+            </div>
+          </li>
+          <li>
+            <span class="howto-num">4</span>
+            <div>
+              <h3>Final</h3>
+              <p>Gana el país con más puntos. Sale el <strong>podio</strong> con los 3 mejores países y su MVP.</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="howto-script">
+          <div class="howto-script-head">
+            <strong>🎙️ Guion para leerlo en el LIVE</strong>
+            <button class="btn btn-ghost" id="copy-script" type="button">Copiar</button>
+          </div>
+          <p id="howto-script-text"></p>
+        </div>
+      </details>
+    </section>
+
     <!-- ===== Partida ===== -->
     <section class="card game-card">
       <div class="card-head">
