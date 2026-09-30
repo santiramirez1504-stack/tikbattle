@@ -333,12 +333,14 @@ async function saveSizes() {
 const OVERLAY_OPTIONS = [
   { key: 'showStatus', inputId: 'show-status', on: 'Barra de mensaje visible en el overlay', off: 'Barra de mensaje oculta en el overlay' },
   { key: 'showGiftAlerts', inputId: 'show-gift-alerts', on: 'Alertas de regalo visibles en el overlay', off: 'Alertas de regalo ocultas en el overlay' },
+  { key: 'doubleFinal', inputId: 'double-final', on: 'X2 sorpresa activado (35 % de las partidas)', off: 'X2 sorpresa desactivado' },
 ];
 
 function renderOverlayOptions(options) {
   for (const { key, inputId } of OVERLAY_OPTIONS) {
     el(inputId).checked = !options || options[key] !== false;
   }
+  el('howto-x2').hidden = !el('double-final').checked; // "Cómo se juega" solo habla del X2 si está activado
   const opacity = options && Number.isInteger(options.flagOpacity) ? options.flagOpacity : 100;
   el('flag-opacity').value = String(opacity);
   el('flag-opacity-value').textContent = `${opacity} %`;

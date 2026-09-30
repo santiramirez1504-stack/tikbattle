@@ -47,6 +47,7 @@ class GameRoom extends EventEmitter {
     this.overlayOptions = normalizeOverlayOptions(config.overlayOptions);
 
     this.game = new GameEngine(config.countries, { durationSeconds: config.durationSeconds });
+    this.game.setDoubleFinalEnabled(this.overlayOptions.doubleFinal);
     this.chatProcessor = new ChatProcessor(this.game, config.countries);
     this.giftProcessor = new GiftProcessor(this.game, config.gifts);
     this.interactionProcessor = new InteractionProcessor(this.game);
@@ -128,6 +129,7 @@ class GameRoom extends EventEmitter {
   // Cambia qué se muestra en el overlay al instante
   applyOverlayOptions(options) {
     this.overlayOptions = normalizeOverlayOptions(options);
+    this.game.setDoubleFinalEnabled(this.overlayOptions.doubleFinal);
     this.emit('game', 'settings');
   }
 
@@ -253,6 +255,7 @@ class GameRoom extends EventEmitter {
   applyConfig(config) {
     this.overlaySizes = normalizeOverlaySizes(config.overlaySizes);
     this.overlayOptions = normalizeOverlayOptions(config.overlayOptions);
+    this.game.setDoubleFinalEnabled(this.overlayOptions.doubleFinal);
     this.activeGifts = config.gifts;
     this.giftProcessor.setGifts(config.gifts);
 

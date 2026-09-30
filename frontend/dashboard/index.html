@@ -59,7 +59,7 @@
             <span class="howto-num">3</span>
             <div>
               <h3>Durante la partida</h3>
-              <p>La partida dura <strong id="howto-duration">2 min</strong>. Las banderas se ordenan por puntos y debajo sale la foto del <strong>MVP</strong>: quien más aporta a su país. A veces, en los últimos 30 s llega el <strong>⚡X2</strong> sorpresa y todo vale el doble.</p>
+              <p>La partida dura <strong id="howto-duration">2 min</strong>. Las banderas se ordenan por puntos y debajo sale la foto del <strong>MVP</strong>: quien más aporta a su país. <span id="howto-x2">A veces, en los últimos 30 s llega el <strong>⚡X2</strong> sorpresa y todo vale el doble.</span></p>
             </div>
           </li>
           <li>
@@ -145,7 +145,7 @@
     <!-- ===== Tamaños del overlay ===== -->
     <section class="card">
       <div class="card-head">
-        <h2>Tamaños del overlay</h2>
+        <h2>Opciones y tamaños del overlay</h2>
         <span class="badge ok" id="sizes-status">Guardado ✓</span>
       </div>
       <label class="toggle-row" for="show-status">
@@ -155,6 +155,10 @@
       <label class="toggle-row" for="show-gift-alerts">
         <input type="checkbox" id="show-gift-alerts" checked>
         <span><strong>Mostrar las alertas de regalo</strong> (el recuadro "juan envió Rosa +5 a CUBA"). Los regalos suman puntos igual.</span>
+      </label>
+      <label class="toggle-row" for="double-final">
+        <input type="checkbox" id="double-final" checked>
+        <span><strong>⚡ Activar el X2 sorpresa</strong>: en los últimos 30 s todos los puntos valen el doble. Solo aparece al azar en el <strong>35 % de las partidas</strong>, sin avisar antes.</span>
       </label>
       <!-- Opacidad solo de las banderas (puntos, MVP, corona e insignias no cambian) -->
       <div class="size-row opacity-row">

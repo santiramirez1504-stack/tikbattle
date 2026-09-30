@@ -4,6 +4,7 @@ const OVERLAY_OPTIONS = {
   showStatus: { type: 'boolean', default: true },     // barra de mensaje de arriba y la actividad que aparece en ella
   showGiftAlerts: { type: 'boolean', default: true }, // recuadro que avisa de cada regalo ("juan envió Rosa +5 a CUBA")
   flagOpacity: { type: 'integer', default: 100, min: 20, max: 100 }, // opacidad de las banderas, en %
+  doubleFinal: { type: 'boolean', default: true },    // ¿puede salir el X2 sorpresa en los últimos 30 s?
 };
 const OVERLAY_OPTION_KEYS = Object.keys(OVERLAY_OPTIONS);
 

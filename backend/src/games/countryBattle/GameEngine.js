@@ -37,6 +37,7 @@ class GameEngine extends EventEmitter {
     this.status = GAME_STATUS.WAITING;
     this.timer = null;
     this.doubleFinal = false; // ¿esta partida tiene X2 en los últimos segundos?
+    this.doubleFinalEnabled = true; // el streamer puede apagar el X2 desde el dashboard
     this.setCountries(countries);
   }
 
@@ -91,9 +92,18 @@ class GameEngine extends EventEmitter {
 
     this.timer = this.createTimer();
     this.status = GAME_STATUS.RUNNING;
-    this.doubleFinal = this.random() < DOUBLE_FINAL_CHANCE;
+    this.doubleFinal = this.doubleFinalEnabled && this.random() < DOUBLE_FINAL_CHANCE;
     this.timer.start();
     this.emit('start');
+  }
+
+  // Activa o apaga el X2 sorpresa. Si se apaga en plena partida, también se quita el de la partida actual;
+  // si se enciende, se aplica desde la próxima partida (el sorteo es al empezar).
+  setDoubleFinalEnabled(enabled) {
+    this.doubleFinalEnabled = Boolean(enabled);
+    if (!this.doubleFinalEnabled) {
+      this.doubleFinal = false;
+    }
   }
 
   // ¿Los puntos valen el doble AHORA? (partida con X2 final y dentro de los últimos segundos)
@@ -126,7 +136,7 @@ class GameEngine extends EventEmitter {
 
     this.timer = this.createTimer();
     this.status = GAME_STATUS.RUNNING;
-    this.doubleFinal = Boolean(doubleFinal);
+    this.doubleFinal = Boolean(doubleFinal) && this.doubleFinalEnabled;
     this.timer.resume(startTime, endTime);
     this.emit('start');
   }

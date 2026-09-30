@@ -41,6 +41,7 @@ const gameConfigSchema = new mongoose.Schema(
       showStatus: { type: Boolean, default: true },
       showGiftAlerts: { type: Boolean, default: true },
       flagOpacity: { type: Number, default: 100 }, // opacidad de las banderas, en % (20 a 100)
+      doubleFinal: { type: Boolean, default: true }, // false = nunca sale el X2 sorpresa
     },
   },
   { timestamps: true }

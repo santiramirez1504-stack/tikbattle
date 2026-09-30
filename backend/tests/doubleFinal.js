@@ -51,6 +51,51 @@ check('Al terminar o reiniciar, el X2 se apaga', () => {
   assert.strictEqual(game.doubleFinal, false);
 });
 
+check('X2 DESACTIVADO por el streamer: aunque el sorteo diga que sí, no hay X2', () => {
+  const game = new GameEngine(countries, { durationSeconds: 8, random: () => 0 });
+  game.setDoubleFinalEnabled(false);
+  game.start();
+  assert.strictEqual(game.doubleFinal, false);
+  assert.strictEqual(game.getState().doublePoints, false);
+  assert.strictEqual(game.addPoints('cuba', 1, 'juan'), 1);
+  game.finish();
+});
+
+check('Se desactiva EN PLENA partida con X2 activo: se quita al instante', () => {
+  const game = new GameEngine(countries, { durationSeconds: 8, random: () => 0 });
+  game.start();
+  assert.strictEqual(game.getState().doublePoints, true);
+  game.setDoubleFinalEnabled(false);
+  assert.strictEqual(game.getState().doublePoints, false);
+  assert.strictEqual(game.addPoints('cuba', 1, 'juan'), 1);
+  game.finish();
+});
+
+check('Se vuelve a activar: vale desde la PRÓXIMA partida (el sorteo es al empezar)', () => {
+  const game = new GameEngine(countries, { durationSeconds: 8, random: () => 0 });
+  game.setDoubleFinalEnabled(false);
+  game.start();
+  game.setDoubleFinalEnabled(true);
+  assert.strictEqual(game.getState().doublePoints, false);
+  game.finish();
+  game.reset();
+  game.start();
+  assert.strictEqual(game.getState().doublePoints, true);
+  game.finish();
+});
+
+check('Tras reiniciar el servidor con el X2 desactivado, la partida recuperada no trae X2', () => {
+  const original = new GameEngine(countries, { durationSeconds: 8, random: () => 0 });
+  original.start();
+  const endTime = Date.now() + 8000;
+  original.finish();
+  const restored = new GameEngine(countries, { durationSeconds: 8 });
+  restored.setDoubleFinalEnabled(false);
+  restored.resume({ countries: countries.map((c) => ({ ...c, points: 0 })), userCountries: [], durationSeconds: 8, startTime: Date.now(), endTime, doubleFinal: true });
+  assert.strictEqual(restored.doubleFinal, false);
+  restored.finish();
+});
+
 // Con el azar real, en 2.000 partidas debería salir cerca del 35 %
 let withDouble = 0;
 for (let i = 0; i < 2000; i++) {
