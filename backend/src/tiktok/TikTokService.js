@@ -114,6 +114,9 @@ class TikTokService extends EventEmitter {
 
     connection.on(WebcastEvent.CHAT, (data) => this.handleChat(data));
     connection.on(WebcastEvent.GIFT, (data) => this.handleGift(data));
+    connection.on(WebcastEvent.LIKE, (data) => this.handleLike(data));
+    connection.on(WebcastEvent.FOLLOW, (data) => this.handleSocial('FOLLOW', data));
+    connection.on(WebcastEvent.SHARE, (data) => this.handleSocial('SHARE', data));
     connection.on(ControlEvent.DISCONNECTED, () => this.handleDisconnected(connection));
     connection.on(ControlEvent.ERROR, ({ info, exception }) => {
       console.error('[TIKTOK] Error de la librería:', info, exception ? exception.message : '');
@@ -261,6 +264,40 @@ class TikTokService extends EventEmitter {
       giftName: gift.name ?? gift.giftName ?? null,
       giftId: data.giftId,
       count,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Likes: TikTok los agrupa y envía cada cierto tiempo "count" likes de un espectador
+  handleLike(data) {
+    const username = getUsername(data.user);
+    const count = Number(data.count ?? data.likeCount);
+    if (!username || !Number.isFinite(count) || count <= 0) {
+      return;
+    }
+
+    this.emit('event', {
+      type: 'LIKE',
+      source: 'tiktok',
+      username,
+      avatarUrl: getAvatarUrl(data.user),
+      count: Math.floor(count),
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Seguir al streamer (type 'FOLLOW') o compartir el LIVE (type 'SHARE')
+  handleSocial(type, data) {
+    const username = getUsername(data.user);
+    if (!username) {
+      return;
+    }
+
+    this.emit('event', {
+      type,
+      source: 'tiktok',
+      username,
+      avatarUrl: getAvatarUrl(data.user),
       timestamp: new Date().toISOString(),
     });
   }

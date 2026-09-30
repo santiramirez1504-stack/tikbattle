@@ -392,8 +392,10 @@ function addFeedItem(activity) {
   who.textContent = activity.username;
   const countryName = country ? country.name : '';
   // Texto corto: cabe en la cápsula de estado (el detalle del regalo sale en la alerta)
-  const rest = activity.type === 'GIFT'
-    ? ` +${formatPoints(activity.points)} a ${countryName}`
+  // "se unió" no trae puntos; regalos, seguir y compartir sí
+  const FEED_PREFIXES = { GIFT: '', FOLLOW: ' te siguió', SHARE: ' compartió' };
+  const rest = activity.type in FEED_PREFIXES
+    ? `${FEED_PREFIXES[activity.type]} +${formatPoints(activity.points)} a ${countryName}`
     : ` se unió a ${countryName}`;
   text.append(who, document.createTextNode(rest));
   item.append(text);

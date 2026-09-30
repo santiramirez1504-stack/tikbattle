@@ -17,7 +17,8 @@
     "backup": "node scripts/backupDb.js",
     "restore": "node scripts/restoreDb.js",
     "test:load": "node tests/loadTest.js",
-    "test:double": "node tests/doubleFinal.js"
+    "test:double": "node tests/doubleFinal.js",
+    "test:interactions": "node tests/interactions.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

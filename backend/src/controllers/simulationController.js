@@ -62,6 +62,37 @@ async function simulateGift(req, res) {
   res.json({ result, state: room.getState() });
 }
 
+const MAX_LIKES_PER_EVENT = 1000;
+
+// POST /api/simulation/like     body: { "username": "usuario1", "count"?: 15, "avatarUrl"?: "https://..." }
+// POST /api/simulation/follow   body: { "username": "usuario1" }
+// POST /api/simulation/share    body: { "username": "usuario1" }
+function simulateInteraction(type) {
+  return async (req, res) => {
+    const { username, count, avatarUrl } = req.body || {};
+    const likes = count === undefined ? 1 : count;
+
+    if (!isValidText(username, MAX_USERNAME_LENGTH)) {
+      return res.status(400).json({ error: `Envía "username" (máx. ${MAX_USERNAME_LENGTH} caracteres).` });
+    }
+    if (type === 'LIKE' && (!Number.isInteger(likes) || likes < 1 || likes > MAX_LIKES_PER_EVENT)) {
+      return res.status(400).json({ error: `"count" debe ser un número entero de 1 a ${MAX_LIKES_PER_EVENT}.` });
+    }
+
+    const room = await roomManager.getRoom(req.user.id);
+    const result = room.processEvent({
+      type,
+      source: 'simulation',
+      username: username.trim(),
+      avatarUrl: toAvatarUrl(avatarUrl),
+      count: type === 'LIKE' ? likes : 1,
+      timestamp: new Date().toISOString(),
+    });
+
+    res.json({ result, state: room.getState() });
+  };
+}
+
 // Si algo falla (ej. la base de datos al crear la sala), el error va al manejador de errores de server.js
 function catchErrors(handler) {
   return (req, res, next) => handler(req, res).catch(next);
@@ -70,4 +101,7 @@ function catchErrors(handler) {
 module.exports = {
   simulateChat: catchErrors(simulateChat),
   simulateGift: catchErrors(simulateGift),
+  simulateLike: catchErrors(simulateInteraction('LIKE')),
+  simulateFollow: catchErrors(simulateInteraction('FOLLOW')),
+  simulateShare: catchErrors(simulateInteraction('SHARE')),
 };

@@ -2,6 +2,7 @@ const EventEmitter = require('events');
 const GameEngine = require('../games/countryBattle/GameEngine');
 const ChatProcessor = require('../games/countryBattle/ChatProcessor');
 const GiftProcessor = require('../games/countryBattle/GiftProcessor');
+const InteractionProcessor = require('../games/countryBattle/InteractionProcessor');
 const TikTokService = require('../tiktok/TikTokService');
 const gameConfigService = require('../services/gameConfigService');
 const gameHistoryService = require('../services/gameHistoryService');
@@ -48,6 +49,7 @@ class GameRoom extends EventEmitter {
     this.game = new GameEngine(config.countries, { durationSeconds: config.durationSeconds });
     this.chatProcessor = new ChatProcessor(this.game, config.countries);
     this.giftProcessor = new GiftProcessor(this.game, config.gifts);
+    this.interactionProcessor = new InteractionProcessor(this.game);
     this.autoRestartSeconds = config.autoRestartSeconds;
     this.autoRestartTimer = null;
     this.introTimer = null;     // conteo "1, 2, 3, ¡GO!" en marcha
@@ -136,7 +138,7 @@ class GameRoom extends EventEmitter {
   }
 
   // Punto de entrada único para los eventos, vengan del simulador o de TikTok.
-  // event: { type: 'CHAT' | 'GIFT', source, username, message?, giftName?, giftId?, count?, timestamp }
+  // event: { type: 'CHAT' | 'GIFT' | 'LIKE' | 'FOLLOW' | 'SHARE', source, username, message?, giftName?, giftId?, count?, timestamp }
   processEvent(event) {
     switch (event.type) {
       case 'CHAT': {
@@ -158,6 +160,21 @@ class GameRoom extends EventEmitter {
             giftName: result.giftName,
             giftImage: getCachedGiftImage(result.giftId),
             count: result.count,
+            points: result.points,
+          });
+        }
+        return result;
+      }
+      case 'LIKE':
+      case 'FOLLOW':
+      case 'SHARE': {
+        const result = this.interactionProcessor.processInteraction(event);
+        // Seguir y compartir salen en el feed; los likes no (llegan muchos y lo llenarían)
+        if (result.assigned && event.type !== 'LIKE') {
+          this.emit('activity', {
+            type: event.type,
+            username: event.username,
+            countryId: result.countryId,
             points: result.points,
           });
         }
@@ -445,7 +462,14 @@ class GameRoom extends EventEmitter {
       const result = this.processEvent(event);
       if (event.type === 'CHAT') {
         // Solo se muestran los comentarios que sumaron puntos, para no llenar la terminal
-        if (result) this.log(`💬 ${event.username}: "${event.message}" -> +1 ${result}`);
+        if (result) this.log(`💬 ${event.username}: "${event.message}" -> ${result}`);
+        return;
+      }
+      if (event.type === 'LIKE') {
+        return; // llegan muchos: no se muestran en la terminal
+      }
+      if (event.type === 'FOLLOW' || event.type === 'SHARE') {
+        if (result.assigned) this.log(`${event.type === 'FOLLOW' ? '➕' : '🔗'} ${event.username} ${event.type} -> +${result.points} ${result.countryId}`);
         return;
       }
       this.log(`🎁 ${event.username} envió "${event.giftName}" (giftId ${event.giftId}) x${event.count} -> ${JSON.stringify(result)}`);
