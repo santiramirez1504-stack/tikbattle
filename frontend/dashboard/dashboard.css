@@ -567,3 +567,49 @@
   border-radius: 10px;
   background: var(--surface-2);
 }
+
+/* Tarjeta "Juega limpio en TikTok": reglas con ✕ (no hacer) y ✓ (sí hacer) */
+.rules-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.rules-list li {
+  position: relative;
+  padding: 8px 10px 8px 34px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.rules-list li::before {
+  position: absolute;
+  left: 11px;
+  top: 8px;
+  font-weight: 900;
+}
+
+.rules-list .is-no::before {
+  content: '✕';
+  color: var(--danger);
+}
+
+.rules-list .is-ok::before {
+  content: '✓';
+  color: var(--success);
+}
+
+.rules-list a {
+  color: inherit;
+}
+
+@media (min-width: 900px) {
+  .rules-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}

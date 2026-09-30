@@ -16,7 +16,8 @@ const CONFETTI_MS = 5000;
 const DOUBLE_INTRO_MS = 2600;   // cuánto dura el anuncio "X2 ¡Activado!" con rayos
 
 const STATUS_TEXT = {
-  WAITING: '⏳ ¡Elige tu país! Escribe su nombre en el chat',
+  // Textos neutrales: explican cómo jugar, sin pedir regalos, likes ni seguidores (evita sanciones de TikTok)
+  WAITING: '⏳ ¡Elige tu país! Escríbelo una vez en el chat',
   RUNNING: '💬 Escribe tu país UNA vez en el chat para unirte',
   FINISHED: '🏁 ¡Batalla terminada!',
 };
