@@ -17,7 +17,7 @@ const DOUBLE_INTRO_MS = 2600;   // cuánto dura el anuncio "X2 ¡Activado!" con 
 
 const STATUS_TEXT = {
   WAITING: '⏳ ¡Elige tu país! Escribe su nombre en el chat',
-  RUNNING: '💬 Escribe el nombre de tu país en el chat',
+  RUNNING: '💬 Escribe tu país UNA vez en el chat para unirte',
   FINISHED: '🏁 ¡Batalla terminada!',
 };
 
